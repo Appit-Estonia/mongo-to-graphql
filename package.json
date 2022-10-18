@@ -46,6 +46,7 @@
     "@types/lodash": "^4.14.186",
     "semantic-release": "^19.0.5"
   },
+  "private": false,
   "release": {
     "branches": [
       "main",
