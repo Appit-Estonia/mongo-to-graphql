@@ -41,5 +41,9 @@
   "bugs": {
     "url": "https://github.com/Appit-Estonia/mongo-to-graphql/issues"
   },
-  "homepage": "https://github.com/Appit-Estonia/mongo-to-graphql#readme"
+  "homepage": "https://github.com/Appit-Estonia/mongo-to-graphql#readme",
+  "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/lodash": "^4.14.186"
+  }
 }
