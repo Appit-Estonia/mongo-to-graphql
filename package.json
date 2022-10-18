@@ -1,6 +1,6 @@
 {
   "name": "@appit/mongodb-to-graphql",
-  "version": "0.0.0-development",
+  "version": "0.0.0",
   "description": "Package to get data from MongoDB using Apollo server",
   "main": "src/index.ts",
   "files": [
@@ -47,6 +47,9 @@
     "semantic-release": "^19.0.5"
   },
   "release": {
-    "branches": ["main", "next"]
+    "branches": [
+      "main",
+      "next"
+    ]
   }
 }
