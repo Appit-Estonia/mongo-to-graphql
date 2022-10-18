@@ -1,6 +1,6 @@
 {
   "name": "@appit/mongodb-to-graphql",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Package to get data from MongoDB using Apollo server",
   "main": "src/index.ts",
   "files": [
