@@ -1,5 +1,5 @@
 {
-  "name": "mongo-to-graphql-server",
+  "name": "from-mongo-to-graphql",
   "version": "0.0.7",
   "description": "Package to get data from MongoDB using Apollo server",
   "main": "./build/index.js",
@@ -8,7 +8,7 @@
     "build/**/*"
   ],
   "scripts": {
-    "clean": "del ./build/*",
+    "clean": "rm -rf ./build/*",
     "build": "npm run clean && tsc",
     "pub-only": "npm version patch && npm run build && npm publish",
     "pub": "git add . && git commit -m \"Version bump\" && npm version patch && npm run build && npm publish"
