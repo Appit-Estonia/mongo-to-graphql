@@ -1,0 +1,45 @@
+{
+  "name": "@appit/mongodb-to-graphql",
+  "version": "0.0.0-development",
+  "description": "Package to get data from MongoDB using Apollo server",
+  "main": "src/index.ts",
+  "files": [
+    "src/**/*"
+  ],
+  "scripts": {
+    "semantic-release": "semantic-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Appit-Estonia/mongo-to-graphql.git"
+  },
+  "dependencies": {
+    "@typegoose/typegoose": "^9.11.0",
+    "apollo-server-core": "^3.10.3",
+    "apollo-server-express": "^3.10.3",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-async-errors": "^3.1.1",
+    "graphql": "16.6.0",
+    "graphql-compose": "^9.0.9",
+    "graphql-compose-mongoose": "^9.7.2",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
+    "mongoose": "^6.5.2",
+    "mongoose-update-if-current": "^1.4.0",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.7.4"
+  },
+  "author": "Mikk Sarapuu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Appit-Estonia/mongo-to-graphql/issues"
+  },
+  "homepage": "https://github.com/Appit-Estonia/mongo-to-graphql#readme",
+  "devDependencies": {
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/lodash": "^4.14.186",
+    "semantic-release": "^19.0.5"
+  }
+}
