@@ -1,5 +1,5 @@
 {
-  "name": "@appit/mongo-to-graphql",
+  "name": "mongo-to-graphql",
   "version": "0.0.7",
   "description": "Package to get data from MongoDB using Apollo server",
   "main": "./build/index.js",
