@@ -71,14 +71,14 @@ export class MongoQL {
 
     let schemaResolver = { ...resolverDefinitions, ...{ name }, };
 
-    if(draftType) {
+    if (draftType) {
       schemaResolver = {
         ...schemaResolver,
         ...{ type: isCustomType ? this.getResolverCustomType(draftType) : this.getResolverTypes(draftType) }
       }
     }
 
-    if(args) {
+    if (args) {
       schemaResolver = {
         ...schemaResolver,
         ...{ args: args.combined ? this.getResolverCombinedArgs(args) : args.fields }
@@ -98,14 +98,22 @@ export class MongoQL {
   private getResolverTypes(draftType: TResolverType) {
     if (isString(draftType)) { throw new Error("Resolver draft type must be an object"); }
 
-    const isScalarType = (type: string) => getComposerScalars().includes(type);
+    const otc = (fieldValue: string) => {
+      const type = this.getFieldValueType(fieldValue);
+      switch (type) {
+        case "enum": return this.getOrCreateEnumOTC(fieldValue);
+        case "model": return this.getOTC(fieldValue);
+        default: return fieldValue;
+      }
+    }
 
     let fields = {};
     for (const fieldKey in draftType.fields) {
-      const fieldType = draftType.fields[fieldKey];
       fields = {
         ...fields,
-        ...{ [fieldKey]: isScalarType(fieldType) ? fieldType : this.getOTC(fieldType) }
+        ...{
+          [fieldKey]: otc(draftType.fields[fieldKey])
+        }
       }
     }
 
@@ -116,22 +124,49 @@ export class MongoQL {
   }
 
   private getResolverCombinedArgs(draftArgs: ResolverArgs) {
-    const { modelName, argName, fieldName, additionalFields, includedFields} = draftArgs.combined!;
+    const { modelName, argName, fieldName, additionalFields, includedFields } = draftArgs.combined!;
     const otc = this.getOTC(modelName).getInputTypeComposer();
 
     otc.removeOtherFields(includedFields ?? []);
-    if(additionalFields) {
+    if (additionalFields) {
       otc.addFields(additionalFields)
     }
 
-    return { [fieldName]: schemaComposer.createInputTC({
-      name: argName,
-      fields: () => otc.getFields()
-    })}
+    return {
+      [fieldName]: schemaComposer.createInputTC({
+        name: argName,
+        fields: () => otc.getFields()
+      })
+    }
   }
 
   private getOTC(modelKey: string) {
     return getOTC(modelKey, this.getModelSet(modelKey));
+  }
+
+  private getFieldValueType(fieldValue: string) {
+    if (fieldValue.startsWith("enum:")) {
+      return "enum";
+    } else if (getComposerScalars().includes(fieldValue)) {
+      return "scalar";
+    } else {
+      return "model";
+    }
+  }
+
+  /**
+   * Get or create enum OTC from string "enum:{enumName} {value1} {value2} ..."
+   * @param fieldType 
+   * @returns 
+   */
+  private getOrCreateEnumOTC(fieldType: string) {
+    const split = fieldType.split(" ");
+    const enumName = split[0].split(":")[1];
+    const enumValues = split.slice(1);
+
+    return schemaComposer.isEnumType(enumName)
+      ? schemaComposer.getETC(enumName)
+      : schemaComposer.createEnumTC(`enum ${enumName} {${enumValues.join(" ")}}`);
   }
 
   private getModelSet(modelKey: string) {
@@ -150,7 +185,7 @@ export class MongoQL {
       //TODO: population logic should be recursive
       (this.setup[modelKey].modelSet.populates ?? []).forEach(p => {
         otc.removeField(p.options.path);
-        otc.addFields({ [p.options.path]: this.getOTC(p.modelName)});
+        otc.addFields({ [p.options.path]: this.getOTC(p.modelName) });
       });
 
       res = { ...res, [fieldKey]: otc.getResolver(resolverName!) }
