@@ -18,7 +18,6 @@
     "url": "https://github.com/Appit-Estonia/mongo-to-graphql.git"
   },
   "dependencies": {
-    "@typegoose/typegoose": "^9.11.0",
     "apollo-server-core": "^3.10.3",
     "apollo-server-express": "^3.10.3",
     "del-cli": "^5.0.0",

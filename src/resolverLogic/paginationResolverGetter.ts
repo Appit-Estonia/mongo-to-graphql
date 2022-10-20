@@ -5,7 +5,6 @@ import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
 import { ObjectId } from "../permissionsLogic/validate-permission";
 import { getSorting } from "./helpers";
 import { BadRequestError } from "../errors/badRequestError";
-import { IColumnSettings } from "../models/user";
 import { PagiantionTypeProps } from "../typeComposerLogic/types";
 import { ModelSet } from "../context/types/setup";
 import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent, TComparison } from "../context/types/request";
@@ -19,6 +18,13 @@ interface DefinedFilterKeyPair {
 interface QueryTableInfoProps {
   searchableFieldsOnly: boolean;
   userAccountId: string;
+}
+
+export interface IColumnSettings {
+  key: string;
+  visible?: boolean;
+  order?: number;
+  width?: number;
 }
 
 class PaginationResolverCreator {

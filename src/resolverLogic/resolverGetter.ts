@@ -1,5 +1,3 @@
-import { ReturnModelType } from "@typegoose/typegoose";
-import { BeAnObject } from "@typegoose/typegoose/lib/types";
 import { Resolver, schemaComposer } from "graphql-compose";
 import { toRecord } from "./helpers";
 import { getPaginationResolver } from "./paginationResolverGetter";
@@ -10,7 +8,7 @@ import { RequestContent } from "../context/types/request";
 
 class ResolverCreator {
 
-  private model: ReturnModelType<any, BeAnObject>;
+  private model: any;
   private modelSet: ModelSet;
   private props: ResolverCreatorProps;
   private resolverType: TResolver;

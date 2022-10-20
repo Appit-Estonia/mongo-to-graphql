@@ -1,5 +1,3 @@
-import { ReturnModelType } from "@typegoose/typegoose";
-import { BeAnObject } from "@typegoose/typegoose/lib/types";
 import { ObjectTypeComposerArgumentConfigMapDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
 import { resolverFactory } from "graphql-compose-mongoose";
 import { PopulateOptions } from "mongoose";
@@ -18,7 +16,7 @@ export interface Setup {
 
 export interface ModelSet {
   /** Mongoose model */
-  model: ReturnModelType<any, BeAnObject>;
+  model: any;
   /** Parameters for displaying data */
   displayFields?: DisplayField[];
   /** Query filters */
