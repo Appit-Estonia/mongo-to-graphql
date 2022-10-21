@@ -117,10 +117,7 @@ export class MongoQL {
       }
     }
 
-    return schemaComposer.createObjectTC({
-      name: draftType.name,
-      fields: fields
-    });
+    return schemaComposer.createObjectTC({ name: draftType.name, fields });
   }
 
   private getResolverCombinedArgs(draftArgs: ResolverArgs) {
@@ -140,10 +137,6 @@ export class MongoQL {
     }
   }
 
-  private getOTC(modelKey: string) {
-    return getOTC(modelKey, this.getModelSet(modelKey));
-  }
-
   private getFieldValueType(fieldValue: string) {
     if (fieldValue.startsWith("enum:")) {
       return "enum";
@@ -155,14 +148,28 @@ export class MongoQL {
   }
 
   /**
+ * Get OTC from string "{modelName}: {selectedField1} {selectedField2} ..."
+ */
+  private getOTC(fieldValue: string) {
+    const splitted = fieldValue.split(":");
+    const modelName = splitted[0];
+    const selectedFields = splitted.length > 1 ? splitted[1].split(" ").map(s => s.trim()) : [];
+
+    const otc = getOTC(modelName, this.getModelSet(modelName));
+
+    if (selectedFields.length > 0) {
+      otc.removeOtherFields(selectedFields)
+    }
+    return otc;
+  }
+
+  /**
    * Get or create enum OTC from string "enum:{enumName} {value1} {value2} ..."
-   * @param fieldType 
-   * @returns 
    */
   private getOrCreateEnumOTC(fieldType: string) {
-    const split = fieldType.split(" ");
-    const enumName = split[0].split(":")[1];
-    const enumValues = split.slice(1);
+    const splitted = fieldType.split(" ");
+    const enumName = splitted[0].split(":")[1];
+    const enumValues = splitted.slice(1);
 
     return schemaComposer.isEnumType(enumName)
       ? schemaComposer.getETC(enumName)
