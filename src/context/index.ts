@@ -1,6 +1,6 @@
 import { isString, schemaComposer } from "graphql-compose";
 import { ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
-import { Document } from "mongoose";
+import { Document, model } from "mongoose";
 import { getBaseResolver } from "../resolverLogic/resolverGetter";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { TResolver } from "../resolverLogic/types";
@@ -81,7 +81,12 @@ export class MongoQL {
     if (args) {
       schemaResolver = {
         ...schemaResolver,
-        ...{ args: args.combined ? this.getResolverCombinedArgs(args) : args.fields }
+        ...{
+          args: {
+            ...this.getResolverArgs(args),
+            ...this.getResolverCombinedArgs(args),
+          }
+        }
       }
     }
 
@@ -101,7 +106,6 @@ export class MongoQL {
     const otc = (fieldValue: string) => {
       const type = this.getFieldValueType(fieldValue);
       switch (type) {
-        case "enum": return this.getOrCreateEnumOTC(fieldValue);
         case "model": return this.getOTC(fieldValue);
         default: return fieldValue;
       }
@@ -120,21 +124,63 @@ export class MongoQL {
     return schemaComposer.createObjectTC({ name: draftType.name, fields });
   }
 
+  private getResolverArgs(draftArgs: ResolverArgs) {
+
+    const otc = (fieldValue: string) => {
+      const type = this.getFieldValueType(fieldValue);
+      switch (type) {
+        case "enum": return this.getOrCreateEnumOTC(fieldValue);
+        case "model": return this.getOTC(fieldValue).getInputTypeComposer();
+        default: return fieldValue;
+      }
+    }
+
+    let args = {};
+    for (const argName in draftArgs.fields) {
+      args = { ...args, ...{ [argName]: otc(draftArgs.fields[argName].toString()) } }
+    }
+
+    return args;
+  }
+
   private getResolverCombinedArgs(draftArgs: ResolverArgs) {
-    const { modelName, argName, fieldName, additionalFields, includedFields } = draftArgs.combined!;
-    const otc = this.getOTC(modelName).getInputTypeComposer();
 
-    otc.removeOtherFields(includedFields ?? []);
-    if (additionalFields) {
-      otc.addFields(additionalFields)
+    let args = {};
+    for (const argName in draftArgs.combinedFields) {
+      const { modelName, fieldName, additionalFields, includedFields } = draftArgs.combinedFields[argName];
+
+      const fieldsInitial = this.getITC(modelName).getFields();
+      let fields = {};
+
+      // add included fields
+      for (const key in this.getITC(modelName).getFields()) {
+        if (includedFields?.includes(key)) {
+          fields = { ...fields, ...{ [key]: fieldsInitial[key] } }
+        }
+      }
+
+      // add additional fields
+      for (const key in additionalFields ?? {}) {
+        if (!additionalFields) continue
+        const fieldValue = additionalFields[key].toString();
+        if (this.getFieldValueType(fieldValue) === "enum") {
+          additionalFields[key] = this.getOrCreateEnumOTC(fieldValue);
+        }
+        fields = { ...fields, ...{ [key]: additionalFields[key] } }
+      }
+
+      args = {
+        ...args,
+        ...{
+          [argName]: schemaComposer.createInputTC({
+            name: fieldName,
+            fields
+          })
+        }
+      }
     }
 
-    return {
-      [fieldName]: schemaComposer.createInputTC({
-        name: argName,
-        fields: () => otc.getFields()
-      })
-    }
+    return args;
   }
 
   private getFieldValueType(fieldValue: string) {
@@ -174,6 +220,10 @@ export class MongoQL {
     return schemaComposer.isEnumType(enumName)
       ? schemaComposer.getETC(enumName)
       : schemaComposer.createEnumTC(`enum ${enumName} {${enumValues.join(" ")}}`);
+  }
+
+  private getITC(modelName: string) {
+    return getOTC(modelName, this.getModelSet(modelName)).getInputTypeComposer();;
   }
 
   private getModelSet(modelKey: string) {

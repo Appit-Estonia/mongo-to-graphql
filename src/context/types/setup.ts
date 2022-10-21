@@ -45,12 +45,13 @@ export type TResolverType = string | {
 }
 
 export interface ResolverArgs {
-  combined?: {
-    modelName: string;
-    argName: string;
-    fieldName: string;
-    includedFields?: string[];
-    additionalFields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
+  combinedFields?: {
+    [argName: string]: {
+      modelName: string;
+      fieldName: string;
+      includedFields?: string[];
+      additionalFields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
+    }
   };
   fields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
 }
