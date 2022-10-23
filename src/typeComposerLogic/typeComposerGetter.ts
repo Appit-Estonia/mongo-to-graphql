@@ -1,6 +1,7 @@
 import { schemaComposer } from "graphql-compose";
 import { composeMongoose, ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
 import { Document } from "mongoose"
+import { getSetup } from "../context";
 import { ModelSet } from "../context/types/setup";
 
 class TypeComposerCreator {
@@ -21,8 +22,8 @@ class TypeComposerCreator {
   }
 }
 
-export const getOTC = (queryTable: string, modelSet: ModelSet) => {
-  return schemaComposer.isObjectType(queryTable.toString())
+export const getOTC = (queryTable: string) => {
+  return schemaComposer.isObjectType(queryTable)
     ? schemaComposer.getOTC(queryTable)
-    : new TypeComposerCreator(modelSet).getOTC();
+    : new TypeComposerCreator(getSetup(queryTable).modelSet).getOTC();
 }

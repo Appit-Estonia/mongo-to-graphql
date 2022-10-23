@@ -25,7 +25,7 @@ class PaginationOutputTypeCreator {
       name: this.queryModelName + "PaginationType",
       fields: {
         count: "Int!",
-        items: () => [getOTC(this.queryModelName, this.modelSet)],
+        items: () => [getOTC(this.queryModelName)],
         pageInfo: () => this.getPaginationInfoType(),
         displayFields: () => [this.getPaginationDisplayFieldType()],
         filters: () => [this.getFilterType()]

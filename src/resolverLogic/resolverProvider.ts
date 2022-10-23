@@ -3,7 +3,6 @@ import { requireSuperAdmin, requirePermissions, requireAuth } from "../permissio
 import { TResolver } from "./types";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { PERMISSION_VALUES, TOrganisationFeaturePermissionKeys } from "../permissionsLogic/permissions";
-import { ModelSet } from "../context/types/setup";
 
 
 // TODO: not in use, must be combined with resolverGetter!
@@ -12,8 +11,8 @@ export class ResolverProvider {
   private resolver: Resolver;
   private permissionType: keyof typeof PERMISSION_VALUES = "none";
 
-  constructor(queryTableName: string, resolverTypeName: TResolver, modelSet: ModelSet) {
-    const composer = getOTC(queryTableName, modelSet);
+  constructor(queryTableName: string, resolverTypeName: TResolver) {
+    const composer = getOTC(queryTableName);
     this.resolver = composer.getResolver(resolverTypeName + queryTableName);
   }
 
