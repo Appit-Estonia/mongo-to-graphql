@@ -7,11 +7,9 @@ import { RequestContent } from "./request";
 export interface Setup {
   [modelName: string]: {
     modelSet: ModelSet;
-    mongoResolvers?: TResolver[];
-    customResolvers?: ResolverDefinition[];
-    queries?: SchemaFields;
-    mutations?: SchemaFields;
-  }
+    queries?: SchemaField[];
+    mutations?: SchemaField[];
+  };
 }
 
 export interface ModelSet {
@@ -58,12 +56,11 @@ export interface ResolverArgs {
 
 export type TResolver = keyof typeof resolverFactory;
 
-export interface SchemaFields {
-  [name: string]: {
-    persmission: "none" | "read" | "write" | "execute";
-    resolverName?: string;
-    mongoResoverName?: TResolver;
-  }
+export interface SchemaField {
+  name: string;
+  permission: "none" | "read" | "write" | "execute";
+  mongooseResolver?: TResolver
+  resolver?: ResolverDefinition;
 }
 
 export interface DisplayField {

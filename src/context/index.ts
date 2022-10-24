@@ -4,7 +4,7 @@ import { Document } from "mongoose";
 import { getBaseResolver } from "../resolverLogic/resolverGetter";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { TResolver } from "../resolverLogic/types";
-import { ResolverDefinition, SchemaFields, Setup } from "./types/setup";
+import { ResolverDefinition, SchemaField, Setup } from "./types/setup";
 import { getResolverArg, getCombinedModelTypedArg } from "./resolverArgsTypes";
 import { getResolverCustomType, getResolverTypes } from "./resolverTypes";
 
@@ -26,23 +26,13 @@ export class MongoQL {
     for (const modelKey in this.setup) {
       const setup = this.setup[modelKey];
 
-      (setup.mongoResolvers ?? []).forEach(q => {
-        this.addMongooseResolver(modelKey, q);
+      setup.queries?.forEach(q => {
+        queries = { ...queries, ...this.getSchemaFields(modelKey, q) }
       });
-
-      (setup.customResolvers ?? []).forEach(r => {
-        this.addCustomResolver(modelKey, r);
+      
+      setup.mutations?.forEach(m => {
+        mutations = { ...mutations, ...this.getSchemaFields(modelKey, m) }
       });
-
-      queries = {
-        ...queries,
-        ...this.getSchemaFields(modelKey, setup.queries ?? {})
-      }
-
-      mutations = {
-        ...mutations,
-        ...this.getSchemaFields(modelKey, setup.mutations ?? {})
-      }
 
       if (Object.keys(queries).length > 0) {
         schemaComposer.Query.addFields(queries);
@@ -99,22 +89,25 @@ export class MongoQL {
     getOTC(modelKey).addResolver(schemaResolver);
   }
 
-  private getSchemaFields(modelKey: string, schemaFields: SchemaFields) {
+  private getSchemaFields(modelKey: string, field: SchemaField) {
     let res = {};
-    for (const fieldKey in schemaFields) {
-      const field = schemaFields[fieldKey];
-      const resolverName = field.mongoResoverName ? field.mongoResoverName + modelKey : field.resolverName;
 
-      const otc = getOTC(modelKey);
-      //TODO: population logic should be recursive
-      (this.setup[modelKey].modelSet.populates ?? []).forEach(p => {
-        otc.removeField(p.options.path);
-        otc.addFields({ [p.options.path]: getOTC(p.modelName) });
-      });
-
-      res = { ...res, [fieldKey]: otc.getResolver(resolverName!) }
+    if (field.mongooseResolver) {
+      this.addMongooseResolver(modelKey, field.mongooseResolver);
+    }
+    if (field.resolver) {
+      this.addCustomResolver(modelKey, field.resolver);
     }
 
-    return res;
+    const resolverName = field.resolver ? field.resolver.name : field.mongooseResolver + modelKey;
+    const otc = getOTC(modelKey);
+
+    // TODO: population logic should be recursive
+    (this.setup[modelKey].modelSet.populates ?? []).forEach(p => {
+      otc.removeField(p.options.path);
+      otc.addFields({ [p.options.path]: getOTC(p.modelName) });
+    });
+
+    return { [field.name]: otc.getResolver(resolverName!) }
   }
 }
