@@ -1,7 +1,7 @@
 import { InputTypeComposerFieldConfigMap, isString, ObjectTypeComposerArgumentConfigAsObjectDefinition, ObjectTypeComposerArgumentConfigDefinition, ObjectTypeComposerArgumentConfigMapDefinition, schemaComposer } from "graphql-compose";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { getFieldValueType, isShort, TArgField } from "./helpers";
-import { ResolverArgs } from "./types/setup";
+import { CombinedFields } from "./types/setup";
 
 export const getScalarTypedArg = (field: TArgField) => {
   return field as ObjectTypeComposerArgumentConfigDefinition;
@@ -54,11 +54,11 @@ export const getEnumTypedArg = (field: TArgField) => {
 
 }
 
-export const getCombinedModelTypedArg = (draftArgs: ResolverArgs) => {
+export const getCombinedModelTypedArg = (draftArgs: CombinedFields) => {
 
   let args = {};
-  for (const argName in draftArgs.combinedFields) {
-    const { modelName, fieldName, additionalFields, includedFields } = draftArgs.combinedFields[argName];
+  for (const argName in draftArgs) {
+    const { modelName, fieldName, additionalFields, includedFields } = draftArgs[argName];
 
     const fieldsInitial =  getOTC(modelName).getInputTypeComposer().getFields();
     let fields = {};

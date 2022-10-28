@@ -46,15 +46,17 @@ export type TResolverType = string | {
 }
 
 export interface ResolverArgs {
-  combinedFields?: {
-    [argName: string]: {
-      modelName: string;
-      fieldName: string;
-      includedFields?: string[];
-      additionalFields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
-    }
-  };
+  combinedFields?: CombinedFields;
   fields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
+}
+
+export interface CombinedFields {
+  [argName: string]: {
+    modelName: string;
+    fieldName: string;
+    includedFields?: string[];
+    additionalFields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
+  }
 }
 
 export type TResolver = keyof typeof resolverFactory;
