@@ -5,11 +5,14 @@ import { RequestContent } from "./request";
 
 
 export interface Setup {
-  [modelName: string]: {
-    modelSet: ModelSet;
-    queries?: SchemaField[];
-    mutations?: SchemaField[];
+  models: {
+    [modelName: string]: {
+      modelSet: ModelSet;
+      queries?: SchemaField[];
+      mutations?: SchemaField[];
+    };
   };
+  readonlyFields?: string[];
 }
 
 export interface ModelSet {

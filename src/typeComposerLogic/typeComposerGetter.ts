@@ -1,7 +1,7 @@
 import { schemaComposer } from "graphql-compose";
 import { composeMongoose, ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
 import { Document } from "mongoose"
-import { getSetup } from "../context";
+import { getModelSetup, getSetup } from "../context";
 import { ModelSet } from "../context/types/setup";
 
 class TypeComposerCreator {
@@ -15,9 +15,7 @@ class TypeComposerCreator {
   }
 
   public getOTC() {
-    this.typeComposer.getInputTypeComposer().removeField([
-      ...["version", "createdAt", "updatedAt"]
-    ]);
+    this.typeComposer.getInputTypeComposer().removeField(getSetup().readonlyFields ?? []);
     return this.typeComposer;
   }
 }
@@ -25,5 +23,5 @@ class TypeComposerCreator {
 export const getOTC = (queryTable: string) => {
   return schemaComposer.isObjectType(queryTable)
     ? schemaComposer.getOTC(queryTable)
-    : new TypeComposerCreator(getSetup(queryTable).modelSet).getOTC();
+    : new TypeComposerCreator(getModelSetup(queryTable).modelSet).getOTC();
 }

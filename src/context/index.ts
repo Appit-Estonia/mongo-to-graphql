@@ -9,8 +9,12 @@ import { getResolverArg, getCombinedModelTypedArg } from "./resolverArgsTypes";
 import { getResolverCustomType, getResolverTypes } from "./resolverTypes";
 
 let mqSetup: Setup;
-export const getSetup = (setupKey: string) => {
-  return mqSetup[setupKey];
+export const getModelSetup = (setupKey: string) => {
+  return mqSetup.models[setupKey];
+}
+
+export const getSetup = () => {
+  return mqSetup;
 }
 
 export class MongoQL {
@@ -23,8 +27,8 @@ export class MongoQL {
     let mutations = {};
     mqSetup = setup;
 
-    for (const modelKey in this.setup) {
-      const setup = this.setup[modelKey];
+    for (const modelKey in this.setup.models) {
+      const setup = this.setup.models[modelKey];
 
       setup.queries?.forEach(q => {
         queries = { ...queries, ...this.getSchemaFields(modelKey, q) }
@@ -54,7 +58,7 @@ export class MongoQL {
 
   private addMongooseResolver(modelKey: string, resolver: TResolver) {
     getOTC(modelKey).addResolver(getBaseResolver(resolver, {
-      modelSet: this.setup[modelKey].modelSet,
+      modelSet: this.setup.models[modelKey].modelSet,
       queryModelName: modelKey,
       typeComposer: getOTC(modelKey) as ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>
     }));
@@ -103,7 +107,7 @@ export class MongoQL {
     const otc = getOTC(modelKey);
 
     // TODO: population logic should be recursive
-    (this.setup[modelKey].modelSet.populates ?? []).forEach(p => {
+    (this.setup.models[modelKey].modelSet.populates ?? []).forEach(p => {
       otc.removeField(p.options.path);
       otc.addFields({ [p.options.path]: getOTC(p.modelName) });
     });
