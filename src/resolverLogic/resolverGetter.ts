@@ -67,7 +67,6 @@ class ResolverCreator {
       }),
       resolve: async (req: RequestContent) => {
         this.validateRequest("createOne", req);
-        console.log(req.context)
         const newObj = {
           ...req.args.record,
           ...{ userId: new ObjectId(req.context.user.id) }

@@ -2,7 +2,7 @@ import { isObject, isString, ObjectTypeComposerArgumentConfigAsObjectDefinition,
 
 export type TArgField = string | ObjectTypeComposerArgumentConfigDefinition;
 
-const COMPOSER_SCALARS = ["String", "Float", "Int", "Boolean", "ID", "Date", "JSON"];
+const COMPOSER_SCALARS = ["String", "Float", "Int", "Boolean", "ID", "Date", "JSON", "MongoID"];
 
 export const isShort = (field: TArgField): field is string => isString(field);
 
