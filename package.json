@@ -1,6 +1,6 @@
 {
   "name": "from-mongo-to-graphql",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Package to get data from MongoDB using Apollo server",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
