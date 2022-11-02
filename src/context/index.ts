@@ -6,7 +6,7 @@ import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { TResolver } from "../resolverLogic/types";
 import { ResolverDefinition, SchemaField, Setup } from "./types/setup";
 import { getResolverArg, getCombinedModelTypedArg } from "./resolverArgsTypes";
-import { getResolverCustomType, getResolverTypes } from "./resolverTypes";
+import { getResolverModelType, getResolverTypes } from "./resolverTypes";
 
 let mqSetup: Setup;
 export const getModelSetup = (setupKey: string) => {
@@ -67,17 +67,19 @@ export class MongoQL {
   private addCustomResolver(modelKey: string, resolver: ResolverDefinition) {
 
     const { args, name, type: draftType, ...resolverDefinitions } = resolver;
-    const isCustomType = isString(draftType);
+    const isModelType = isString(draftType);
 
     let schemaResolver = { ...resolverDefinitions, ...{ name }, };
 
+    // add types to schema
     if (draftType) {
       schemaResolver = {
         ...schemaResolver,
-        ...{ type: isCustomType ? getResolverCustomType(draftType) : getResolverTypes(draftType) }
+        ...{ type: isModelType ? getResolverModelType(draftType) : getResolverTypes(draftType) }
       }
     }
 
+    // add args to schema
     if (args) {
       schemaResolver = {
         ...schemaResolver,
