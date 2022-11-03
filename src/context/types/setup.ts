@@ -38,11 +38,11 @@ export interface ResolverDefinition extends Omit<ResolverDefinitionBase<any, any
   args?: ResolverArgs;
 }
 
+export type TField = { [key: string]: string; };
+
 export type TResolverType = string | {
   name: string;
-  fields: {
-    [key: string]: string;
-  }
+  fields: TField | [TField];
 }
 
 export interface ResolverArgs {

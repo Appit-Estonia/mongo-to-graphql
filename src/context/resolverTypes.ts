@@ -1,8 +1,8 @@
 import { isString, schemaComposer } from "graphql-compose";
-import { isEmpty, reduce } from "lodash";
+import { isArray, reduce } from "lodash";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { getFieldValueType } from "./helpers";
-import { TResolverType } from "./types/setup";
+import { TField, TResolverType } from "./types/setup";
 
 export const getResolverModelType = (draftType: TResolverType) => {
   if (!isString(draftType)) { throw new Error("Resolver draft custom type must be string"); }
@@ -14,13 +14,8 @@ export const getResolverModelType = (draftType: TResolverType) => {
 export const getResolverTypes = (draftType: TResolverType) => {
   if (isString(draftType)) { throw new Error("Resolver draft type must be an object"); }
 
-  const otc = (fieldValue: string) => {
-    const type = getFieldValueType(fieldValue);
-    switch (type) {
-      case "model": return getOTC(fieldValue);
-      default: return fieldValue;
-    }
-  }
+  const isArrayTypeFields = isArray(draftType.fields);
+  const fields = isArrayTypeFields ? (draftType.fields as [TField])[0] : draftType.fields as TField;
 
   const getModelFields = (fieldKey: string, fieldValue: string) => {
     const split = fieldValue.split("*");
@@ -41,7 +36,7 @@ export const getResolverTypes = (draftType: TResolverType) => {
     return { [fieldKey]: getOTC(fieldValue) };
   }
   
-  const fields = reduce(draftType.fields, (result, value, key) => {
+  const fieldsType = reduce(fields, (result, value, key) => {
     const type = getFieldValueType(value);
     return {
       ...result,
@@ -49,5 +44,6 @@ export const getResolverTypes = (draftType: TResolverType) => {
     };
   }, {})
 
-  return schemaComposer.createObjectTC({ name: draftType.name, fields });
+  const tc = schemaComposer.createObjectTC({ name: draftType.name, fields: fieldsType });
+  return isArrayTypeFields ? [tc] : tc;
 }
