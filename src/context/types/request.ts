@@ -35,14 +35,13 @@ export interface PaginationFilter {
   definedFilters?: DefinedFilterParams[];
 }
 
-export const ComparisonTypes = { eq: "$eq", gt: "$gt", gte: "$gte", in: "$in", lt: "$lt", lte: "$lte", ne: "$ne", nin: "$nin" }
+export const ComparisonTypes = { like: "like", eq: "$eq", gt: "$gt", gte: "$gte", in: "$in", lt: "$lt", lte: "$lte", ne: "$ne", nin: "$nin" }
 
 export type TComparison = keyof typeof ComparisonTypes;
 
 export interface BaseFilterParams {
   fieldKey: string;
   value: string;
-  like: boolean;
   comparison?: TComparison;
 }
 

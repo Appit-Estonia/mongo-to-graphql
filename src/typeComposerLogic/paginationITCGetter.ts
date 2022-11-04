@@ -32,7 +32,6 @@ class PaginationInputTypeCreator {
       fields: {
         fieldKey: "String!",
         value: "String!",
-        like: "Boolean",
         comparison: () => this.getComparisonTC()
       }
     })

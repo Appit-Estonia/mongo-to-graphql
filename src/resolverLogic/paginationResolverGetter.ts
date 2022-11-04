@@ -7,8 +7,9 @@ import { getSorting } from "./helpers";
 import { BadRequestError } from "../errors/badRequestError";
 import { PagiantionTypeProps } from "../typeComposerLogic/types";
 import { ModelSet } from "../context/types/setup";
-import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent, TComparison } from "../context/types/request";
+import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } from "../context/types/request";
 
+type TFilterValue = string | number | RegExp | Types.ObjectId | { [comp: string]: string | number | RegExp | Types.ObjectId; };
 
 interface DefinedFilterKeyPair {
   filterKey: string;
@@ -51,14 +52,13 @@ class PaginationResolverCreator {
       userAccountId: req.context.user.accountId,
       searchableFieldsOnly: true,
     },
-    modelSet);
+      modelSet);
 
     const ands = [
       ...req.args?.paginationFilter?.and ?? [],
-      { 
+      {
         fieldKey: "userId",
         value: req.context.user.id,
-        like: false
       }
     ];
 
@@ -77,8 +77,8 @@ class PaginationResolverCreator {
         limit: req.args.perPage,
         skip: (currentPage - 1) * req.args.perPage ?? 0,
         sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
-      // TODO: fields should be added recursively, meaning populations of populated fields should be also included. 
-      // graphql throws error if field of populated field of populated field is selected (_id works only)
+        // TODO: fields should be added recursively, meaning populations of populated fields should be also included. 
+        // graphql throws error if field of populated field of populated field is selected (_id works only)
       }).select(selectedFieldsNames).populate((modelSet.populates ?? []).map(p => p.options));
 
     return {
@@ -109,7 +109,7 @@ class PaginationResolverCreator {
 
     return {
       model: modelSet.model,
-      selectedFields: defaultFields?.map(d => { 
+      selectedFields: defaultFields?.map(d => {
         return {
           key: d.key.split(".")[0],
           visible: d.visible,
@@ -131,19 +131,20 @@ class PaginationResolverCreator {
   private async getPaginationFilter(paginationFilter: PaginationFilter, modelSet: ModelSet) {
 
     const getFilters = (filters: BaseFilterParams[]) => {
-      const res: { [x: string]: { [comp: string]: string | RegExp | Types.ObjectId; } }[] = [];
+      const res: { [key: string]: TFilterValue }[] = [];
       (filters).forEach(o => {
+
+        const comparison = ComparisonTypes[o.comparison ?? "eq"];
 
         // $ is use to as nested key separator, f.ex event$key is converted to event.key
         (o.fieldKey.split("$")).forEach(nested => {
-          const value = o.like
+          const value = comparison === "like"
             ? new RegExp(".*" + o.value + ".*", "i")
             : isValidObjectId(o.value)
               ? new ObjectId(o.value)
               : o.value;
 
-          const comparison = ComparisonTypes[o.comparison ?? "eq"];
-          res.push({ [nested.replaceAll("$", ".")]: { [comparison]: o.value } })
+          res.push({ [nested.replaceAll("$", ".")]: comparison === "like" ? value : { [comparison]: value } })
         })
       });
 
