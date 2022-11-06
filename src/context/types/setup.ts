@@ -25,6 +25,7 @@ export interface ModelSet {
   paginationOptions?: {
     /** Query population parameters */
     populates: {
+      // in parent object the properties with the same name are overwritten
       name: string;
       key: string;
       options?: PopulateOptions;
