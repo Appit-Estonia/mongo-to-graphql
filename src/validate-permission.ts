@@ -12,7 +12,7 @@ export const ObjectId = mongoose.Types.ObjectId;
 export const requireSuperAdmin =
   (next: ResolverRpCb<any, any, any>) =>
     (rp: ResolverResolveParams<any, any, any>) => {
-      if (rp.context.user && rp.context.user.isSuperAdmin) {
+      if (rp.context.user && rp.context.user.isAdmin) {
         return next(rp);
       }
       return null;
