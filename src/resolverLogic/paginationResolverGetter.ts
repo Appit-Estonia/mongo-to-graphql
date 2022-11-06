@@ -1,4 +1,4 @@
-import { groupBy, isEmpty, omit, reduce } from "lodash";
+import { groupBy, isEmpty, map, omit, reduce } from "lodash";
 import { Types } from "mongoose";
 import { getPagiantionFilterITC } from "../typeComposerLogic/paginationITCGetter";
 import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
@@ -78,8 +78,6 @@ class PaginationResolverCreator {
         limit: req.args.perPage,
         skip: (currentPage - 1) * req.args.perPage ?? 0,
         sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
-        // TODO: fields should be added recursively, meaning populations of populated fields should be also included. 
-        // graphql throws error if field of populated field of populated field is selected (_id works only)
       }).populate((modelSet.paginationOptions?.populates?.map(p => {
         return {
           path: p.key,
@@ -91,7 +89,11 @@ class PaginationResolverCreator {
           // remove populated properties
           ...omit(i, populateFields ?? []),
           // merge properties of removed parent property
-          ...reduce(i, (result, value, key) => ({ ...result, ...(populateFields?.includes(key) ? value : {}) }), {}),
+          ...reduce(i, (result, value, key) => {
+            return { 
+            ...result, 
+            ...(populateFields?.includes(key) ? map(omit(value, "_id")) : {}) 
+          }}, {}),
         }
       });
 
