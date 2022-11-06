@@ -2,6 +2,8 @@ import { schemaComposer } from "graphql-compose";
 import { ModelSet } from "../context/types/setup";
 import { getOTC } from "./typeComposerGetter";
 import { PagiantionTypeProps } from "./types";
+import { reduce } from "lodash";
+import { getModelSetup } from "../context";
 
 class PaginationOutputTypeCreator {
 
@@ -10,7 +12,7 @@ class PaginationOutputTypeCreator {
 
   constructor(props: PagiantionTypeProps) {
     this.queryModelName = props.queryModelName;
-    if(!props.modelSet) {
+    if (!props.modelSet) {
       throw new Error("Model set is missing for pagination OTC creator")
     }
     this.modelSet = props.modelSet;
@@ -25,7 +27,11 @@ class PaginationOutputTypeCreator {
       name: this.queryModelName + "PaginationType",
       fields: {
         count: "Int!",
-        items: () => [getOTC(this.queryModelName)],
+        items: () => {
+          const otc = getOTC(this.queryModelName);
+          const populates = getModelSetup(this.queryModelName).modelSet.paginationOptions?.populates.map(p => p.fields) ?? [];
+          return [otc.addFields(reduce(populates, (result, value) => ({ ...result, ...value }), {}))];
+        },
         pageInfo: () => this.getPaginationInfoType(),
         displayFields: () => [this.getPaginationDisplayFieldType()],
         filters: () => [this.getFilterType()]

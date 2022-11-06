@@ -108,12 +108,6 @@ export class MongoQL {
     const resolverName = field.resolver ? field.resolver.name : field.mongooseResolver + modelKey;
     const otc = getOTC(modelKey);
 
-    // TODO: population logic should be recursive
-    (this.setup.models[modelKey].modelSet.populates ?? []).forEach(p => {
-      otc.removeField(p.options.path);
-      otc.addFields({ [p.options.path]: getOTC(p.modelName) });
-    });
-
     return { [field.name]: otc.getResolver(resolverName!) }
   }
 }

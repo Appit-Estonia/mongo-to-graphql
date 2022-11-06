@@ -1,4 +1,4 @@
-import { groupBy, isEmpty } from "lodash";
+import { groupBy, isEmpty, omit, reduce } from "lodash";
 import { Types } from "mongoose";
 import { getPagiantionFilterITC } from "../typeComposerLogic/paginationITCGetter";
 import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
@@ -51,8 +51,7 @@ class PaginationResolverCreator {
     const { model, selectedFields, defaultFields, filters } = await this.getQueryTableInfo({
       userAccountId: req.context.user.accountId,
       searchableFieldsOnly: true,
-    },
-      modelSet);
+    }, modelSet);
 
     const ands = [
       ...req.args?.paginationFilter?.and ?? [],
@@ -67,10 +66,12 @@ class PaginationResolverCreator {
       ...{ and: ands }
     };
 
+    const populateFields =  modelSet.paginationOptions?.populates?.map(p => p.key);
+
     const filter = await this.getPaginationFilter(paginationFilter, modelSet);
     const selectedFieldsNames = selectedFields.map(s => s.key);
     const count = await model.count(filter).select(selectedFieldsNames);
-    const items = await model.find(
+    let items = (await model.find(
       filter,
       null,
       {
@@ -79,7 +80,20 @@ class PaginationResolverCreator {
         sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
         // TODO: fields should be added recursively, meaning populations of populated fields should be also included. 
         // graphql throws error if field of populated field of populated field is selected (_id works only)
-      }).select(selectedFieldsNames).populate((modelSet.populates ?? []).map(p => p.options));
+      }).populate((modelSet.paginationOptions?.populates?.map(p => {
+        return {
+          path: p.key,
+          select: Object.keys(p.fields)
+        }
+      }) ?? [])).lean())
+      .map((i: any) => {
+        return {
+          // remove populated properties
+          ...omit(i, populateFields ?? []),
+          // merge properties of removed parent property
+          ...reduce(i, (result, value, key) => ({ ...result, ...(populateFields?.includes(key) ? value : {}) }), {}),
+        }
+      });
 
     return {
       count,

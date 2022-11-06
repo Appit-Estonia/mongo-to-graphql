@@ -82,8 +82,7 @@ class ResolverCreator {
       resolve: async (req: RequestContent) => {
         this.validateRequest("findById", req);
         const res = await this.model.findOne({ _id: req.args._id });
-        return await this.model.findOne({ _id: req.args._id })
-          .populate(this.modelSet.populates?.map(p => p.options) ?? []);
+        return await this.model.findOne({ _id: req.args._id });
       }
     });
   }
@@ -103,8 +102,7 @@ class ResolverCreator {
       args: resolver.getArgs(),
       resolve: async (req: RequestContent) => {
         this.validateRequest("findMany", req);
-        return await this.model.find({ _id: { $in: req.args.ids} })
-          .populate(this.modelSet.populates?.map(p => p.options) ?? []);
+        return await this.model.find({ _id: { $in: req.args.ids} });
       }
     }
   }
@@ -114,8 +112,7 @@ class ResolverCreator {
       resolver: this.props.typeComposer.mongooseResolvers.findOne(),
       resolve: async (req: RequestContent) => {
         this.validateRequest("findOne", req);
-        return await this.model.findOne(req.args)
-          .populate(this.modelSet.populates?.map(p => p.options) ?? []);
+        return await this.model.findOne(req.args);
       }
     });
   }

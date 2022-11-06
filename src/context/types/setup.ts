@@ -22,11 +22,17 @@ export interface ModelSet {
   displayFields?: DisplayField[];
   /** Query filters */
   filters?: Filter[];
-  /** Query population parameters */
-  populates?: {
-    modelName: string;
-    options: PopulateOptions
-  }[];
+  paginationOptions?: {
+    /** Query population parameters */
+    populates: {
+      name: string;
+      key: string;
+      options?: PopulateOptions;
+      fields: {
+        [fieldKey: string]: any;
+      }
+    }[];
+  };
   /** Validations before executing query */
   requestValidations?: {
     [key: string]: ((requestContent: RequestContent) => void)[];
