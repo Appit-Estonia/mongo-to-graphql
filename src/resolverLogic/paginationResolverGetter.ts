@@ -66,7 +66,7 @@ class PaginationResolverCreator {
       ...{ and: ands }
     };
 
-    const populateFields =  modelSet.paginationOptions?.populates?.map(p => p.key);
+    const populateFields = modelSet.paginationOptions?.populates?.map(p => p.key);
 
     const filter = await this.getPaginationFilter(paginationFilter, modelSet);
     const selectedFieldsNames = selectedFields.map(s => s.key);
@@ -90,10 +90,11 @@ class PaginationResolverCreator {
           ...omit(i, populateFields ?? []),
           // merge properties of removed parent property
           ...reduce(i, (result, value, key) => {
-            return { 
-            ...result, 
-            ...(populateFields?.includes(key) ? map(omit(value, "_id")) : {}) 
-          }}, {}),
+            return {
+              ...result,
+              ...(populateFields?.includes(key) ? omit(value, "_id") : {})
+            }
+          }, {}),
         }
       });
 
