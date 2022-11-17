@@ -27,6 +27,10 @@ export class MongoQL {
     let mutations = {};
     mqSetup = setup;
 
+    setup.anonymousObjectTypeComposers?.forEach(t => {
+      schemaComposer.createObjectTC(t)
+    });
+
     for (const modelKey in this.setup.models) {
       const setup = this.setup.models[modelKey];
 

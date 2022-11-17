@@ -1,4 +1,4 @@
-import { ObjectTypeComposerArgumentConfigMapDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
+import { ObjectTypeComposerArgumentConfigMapDefinition, ObjectTypeComposerDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
 import { resolverFactory } from "graphql-compose-mongoose";
 import { PopulateOptions } from "mongoose";
 import { RequestContent } from "./request";
@@ -13,12 +13,13 @@ export interface Setup {
     };
   };
   readonlyFields?: string[];
+  anonymousObjectTypeComposers?: ObjectTypeComposerDefinition<any, any>[];
 }
 
 export interface PopulateOption {
   key: string;
   options?: PopulateOptions;
-  fields?: { [key: string]: string }
+  fields?: { [key: string]: string };
 }
 
 export interface ModelSet {
