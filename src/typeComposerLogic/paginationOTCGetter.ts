@@ -43,8 +43,6 @@ class PaginationOutputTypeCreator {
               propPath = [...propPath, k];
               const prop = propPath.join(".");
 
-              console.log((p.fields ?? {})[k])
-
               if (p.fields && p.fields[k]) {
                 otc.removeField(prop);
                 otc.addNestedFields({
