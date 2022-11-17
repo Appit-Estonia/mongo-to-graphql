@@ -64,10 +64,14 @@ export const getCombinedModelTypedArg = (draftArgs: CombinedFields) => {
     let fields = {};
 
     // add included fields
-    for (const key in fieldsInitial) {
-      if (includedFields?.includes(key)) {
-        fields = { ...fields, ...{ [key]: fieldsInitial[key] } }
+    if(includedFields) {
+      for (const key in fieldsInitial) {
+        if (includedFields?.includes(key)) {
+          fields = { ...fields, ...{ [key]: fieldsInitial[key] } }
+        }
       }
+    } else {
+      fields = fieldsInitial;
     }
 
     // add additional fields
