@@ -15,6 +15,12 @@ export interface Setup {
   readonlyFields?: string[];
 }
 
+export interface PopulateOption {
+  key: string;
+  options?: PopulateOptions;
+  fields?: { [key: string]: string }
+}
+
 export interface ModelSet {
   /** Mongoose model */
   model: any;
@@ -24,15 +30,7 @@ export interface ModelSet {
   filters?: Filter[];
   paginationOptions?: {
     /** Query population parameters */
-    populates: {
-      // in parent object the properties with the same name are overwritten
-      name: string;
-      key: string;
-      options?: PopulateOptions;
-      fields: {
-        [fieldKey: string]: any;
-      }
-    }[];
+    populates: PopulateOption[];
   };
   /** Validations before executing query */
   requestValidations?: {

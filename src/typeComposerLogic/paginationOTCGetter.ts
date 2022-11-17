@@ -2,8 +2,9 @@ import { schemaComposer } from "graphql-compose";
 import { ModelSet } from "../context/types/setup";
 import { getOTC } from "./typeComposerGetter";
 import { PagiantionTypeProps } from "./types";
-import { reduce } from "lodash";
+import { capitalize, reduce } from "lodash";
 import { getModelSetup } from "../context";
+import { getResolverTypes } from "../context/resolverTypes";
 
 class PaginationOutputTypeCreator {
 
@@ -28,9 +29,35 @@ class PaginationOutputTypeCreator {
       fields: {
         count: "Int!",
         items: () => {
-          const otc = getOTC(this.queryModelName);
-          const populates = getModelSetup(this.queryModelName).modelSet.paginationOptions?.populates.map(p => p.fields) ?? [];
-          return [otc.addFields(reduce(populates, (result, value) => ({ ...result, ...value }), {}))];
+
+          const populates = getModelSetup(this.queryModelName).modelSet.paginationOptions?.populates;
+          const otc = schemaComposer.createObjectTC({
+            name: this.queryModelName + "PaginationTypeItems",
+            fields: getOTC(this.queryModelName).getFields()
+          });
+
+          populates?.forEach(p => {
+            let propPath: string[] = [];
+            p.key.split(".").forEach(k => {
+
+              propPath = [...propPath, k];
+              const prop = propPath.join(".");
+
+              console.log((p.fields ?? {})[k])
+
+              if (p.fields && p.fields[k]) {
+                otc.removeField(prop);
+                otc.addNestedFields({
+                  [prop]: getResolverTypes({
+                    name: this.queryModelName + "PaginationTypeItem" + capitalize(k),
+                    fields: reduce(p.fields, (result, value, key) => ({ ...result, ...{ [key]: `*${value}` } }), {})
+                  })
+                });
+              }
+            });
+          });
+
+          return [otc]
         },
         pageInfo: () => this.getPaginationInfoType(),
         displayFields: () => [this.getPaginationDisplayFieldType()],

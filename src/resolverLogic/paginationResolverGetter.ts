@@ -79,24 +79,27 @@ class PaginationResolverCreator {
         skip: (currentPage - 1) * req.args.perPage ?? 0,
         sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
       }).populate((modelSet.paginationOptions?.populates?.map(p => {
-        return {
-          path: p.key,
-          select: Object.keys(p.fields)
-        }
+        return Object.values(p.fields ?? {}).map(f => {
+          const fields = f.split(":")[1];
+          return {
+            path: p.key,
+            select: fields ? fields.split(" ") : undefined
+          }
+        })
       }) ?? [])).lean())
-      .map((i: any) => {
-        return {
-          // remove populated properties
-          ...omit(i, populateFields ?? []),
-          // merge properties of removed parent property
-          ...reduce(i, (result, value, key) => {
-            return {
-              ...result,
-              ...(populateFields?.includes(key) ? omit(value, "_id") : {})
-            }
-          }, {}),
-        }
-      });
+      // .map((i: any) => {
+      //   return {
+      //     // remove populated properties
+      //     ...omit(i, populateFields ?? []),
+      //     // merge properties of removed parent property
+      //     ...reduce(i, (result, value, key) => {
+      //       return {
+      //         ...result,
+      //         ...(populateFields?.includes(key) ? omit(value, "_id") : {})
+      //       }
+      //     }, {}),
+      //   }
+      // });
 
     return {
       count,
