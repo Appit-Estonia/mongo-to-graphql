@@ -44,7 +44,6 @@ class ResolverCreator {
   private getResolverProps() {
     switch (this.resolverType) {
       case "createOne":
-      case "u-createOne":
         return this.getCreateOne();
       case "findById":
         return this.getFindById();
