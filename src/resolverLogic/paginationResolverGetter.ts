@@ -58,7 +58,7 @@ class PaginationResolverCreator {
       ...req.args?.paginationFilter?.and ?? [],
       {
         fieldKey: getSetup().userIdPathInContext?.split(".").reverse()[0] ?? "",
-        value: req.context.user.id,
+        value: getUserId(req.context),
       }
     ];
 
