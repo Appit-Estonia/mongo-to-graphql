@@ -1,13 +1,14 @@
 import { groupBy, isEmpty, map, omit, reduce } from "lodash";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { getPagiantionFilterITC } from "../typeComposerLogic/paginationITCGetter";
 import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
-import { ObjectId } from "../permissionsLogic/validate-permission";
+import { getUserId, ObjectId } from "../permissionsLogic/validate-permission";
 import { getSorting } from "./helpers";
 import { BadRequestError } from "../errors/badRequestError";
 import { PagiantionTypeProps } from "../typeComposerLogic/types";
 import { ModelSet } from "../context/types/setup";
 import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } from "../context/types/request";
+import { getSetup } from "../context";
 
 type TFilterValue = string | number | RegExp | Types.ObjectId | { [comp: string]: string | number | RegExp | Types.ObjectId; };
 
@@ -18,7 +19,7 @@ interface DefinedFilterKeyPair {
 
 interface QueryTableInfoProps {
   searchableFieldsOnly: boolean;
-  userAccountId: string;
+  userId: mongoose.Types.ObjectId | null;
 }
 
 export interface IColumnSettings {
@@ -49,14 +50,14 @@ class PaginationResolverCreator {
     }
 
     const { model, selectedFields, defaultFields, filters } = await this.getQueryTableInfo({
-      userAccountId: req.context.user.accountId,
+      userId: getUserId(req.context),
       searchableFieldsOnly: true,
     }, modelSet);
 
     const ands = [
       ...req.args?.paginationFilter?.and ?? [],
       {
-        fieldKey: "userId",
+        fieldKey: getSetup().userIdPathInContext?.split(".").reverse()[0] ?? "",
         value: req.context.user.id,
       }
     ];
