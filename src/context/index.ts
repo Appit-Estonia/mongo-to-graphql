@@ -1,12 +1,12 @@
-import { isString, schemaComposer } from "graphql-compose";
+import { isString, ResolverResolveParams, ResolverRpCb, schemaComposer } from "graphql-compose";
 import { ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
 import { Document } from "mongoose";
 import { getBaseResolver } from "../resolverLogic/resolverGetter";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
-import { TResolver } from "../resolverLogic/types";
 import { ResolverDefinition, SchemaField, Setup } from "./types/setup";
 import { getResolverArg, getCombinedModelTypedArg } from "./resolverArgsTypes";
 import { getResolverModelType, getResolverTypes } from "./resolverTypes";
+import { validateUserAccess } from "../permissionsLogic/validate-permission";
 
 let mqSetup: Setup;
 export const getModelSetup = (setupKey: string) => {
@@ -27,7 +27,7 @@ export class MongoQL {
     let mutations = {};
     mqSetup = setup;
 
-    setup.anonymousObjectTypeComposers?.forEach(t => {
+    setup.nonModelTypeComposers?.forEach(t => {
       schemaComposer.createObjectTC(t)
     });
 
@@ -60,10 +60,18 @@ export class MongoQL {
     return schemaComposer.getResolveMethods();
   }
 
-  private addMongooseResolver(modelKey: string, resolver: TResolver) {
-    getOTC(modelKey).addResolver(getBaseResolver(resolver, {
+  private addMongooseResolver(modelKey: string, schemaField: SchemaField) {
+    const { ignoreUserAccess, mongooseResolver, name, userReferenceName } = schemaField;
+
+    if(!mongooseResolver) {
+      throw new Error(`Missing resolver for field '${name}'`)
+    }
+
+    getOTC(modelKey).addResolver(getBaseResolver(mongooseResolver, {
       modelSet: this.setup.models[modelKey].modelSet,
       queryModelName: modelKey,
+      ignoreUserAccess,
+      userReferenceName,
       typeComposer: getOTC(modelKey) as ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>
     }));
   }
@@ -96,14 +104,19 @@ export class MongoQL {
       }
     }
 
-    getOTC(modelKey).addResolver(schemaResolver);
+    getOTC(modelKey).addResolver(schemaResolver).wrapResolverResolve(name!,
+      (next: ResolverRpCb<any, any, any>) => (rp: ResolverResolveParams<any, any, any>) => {
+        const { context } = rp;
+        validateUserAccess(context);
+        return next(rp);
+      });
   }
 
   private getSchemaFields(modelKey: string, field: SchemaField) {
     let res = {};
 
     if (field.mongooseResolver) {
-      this.addMongooseResolver(modelKey, field.mongooseResolver);
+      this.addMongooseResolver(modelKey, field);
     }
     if (field.resolver) {
       this.addCustomResolver(modelKey, field.resolver);

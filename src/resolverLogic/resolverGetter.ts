@@ -1,26 +1,30 @@
 import { Resolver, schemaComposer } from "graphql-compose";
 import { toRecord } from "./helpers";
 import { getPaginationResolver } from "./paginationResolverGetter";
-import { IResolveParams as ResolverCreatorProps, ResolverProps, TResolver } from "./types";
+import { IResolveParams as ResolverCreatorProps, TResolver } from "./types";
 import { ObjectId } from "../validate-permission";
-import { ModelSet } from "../context/types/setup";
 import { RequestContent } from "../context/types/request";
+import { ResolverResolveParams, ResolverRpCb } from "graphql-compose/lib/Resolver";
+import { isEmpty } from "lodash";
+import { getUserId, validateUserAccess } from "../permissionsLogic/validate-permission";
 
 class ResolverCreator {
 
   private model: any;
-  private modelSet: ModelSet;
   private props: ResolverCreatorProps;
   private resolverType: TResolver;
   private resolverName: string;
-  private resolverProps: ResolverProps;
+  private resolverProps: any;
+  private ignoreUserAccess?: boolean;
+  private userRefenceName?: string;
 
   constructor(resolverTypeName: TResolver, props: ResolverCreatorProps) {
     this.props = props;
-    this.modelSet = props.modelSet;
     this.model = props.modelSet.model;
     this.resolverType = resolverTypeName;
     this.resolverName = resolverTypeName + props.queryModelName;
+    this.ignoreUserAccess = props.ignoreUserAccess;
+    this.userRefenceName = props.userReferenceName;
     this.resolverProps = this.getResolverProps();
   }
 
@@ -40,6 +44,7 @@ class ResolverCreator {
   private getResolverProps() {
     switch (this.resolverType) {
       case "createOne":
+      case "u-createOne":
         return this.getCreateOne();
       case "findById":
         return this.getFindById();
@@ -58,99 +63,83 @@ class ResolverCreator {
     }
   }
 
-  private getCreateOne = (): ResolverProps => {
-    return this.getResolverObject({
-      resolver: this.props.typeComposer.mongooseResolvers.createOne({
-        record: {
-          removeFields: ["userId"]
-        }
-      }),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("createOne", req);
+  private getCreateOne() {
+    return this.props.typeComposer.mongooseResolvers.createOne({
+      record: {
+        removeFields: [this.userRefenceName ?? ""]
+      }
+    }).wrapResolve(() =>
+      async (rp: ResolverResolveParams<any, any, any>) => {
+        const { args, context } = rp;
+        this.validateRequest("createOne", { args, context });
         const newObj = {
-          ...req.args.record,
-          ...{ userId: new ObjectId(req.context.user.id) }
+          ...args.record,
+          ...(this.userRefenceName ? { [this.userRefenceName]: getUserId(context) } : {})
         }
         return toRecord(await this.model.create(newObj));
-      }
-    });
+      });
   }
 
-  private getFindById(): ResolverProps {
-    return this.getResolverObject({
-      resolver: this.props.typeComposer.mongooseResolvers.findById(),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("findById", req);
-        const res = await this.model.findOne({ _id: req.args._id });
-        return await this.model.findOne({ _id: req.args._id });
-      }
-    });
+  private getFindById() {
+    return this.props.typeComposer.mongooseResolvers.findById()
+      .wrapResolve(() =>
+        async (rp: ResolverResolveParams<any, any, any>) => {
+          const { args, context } = rp;
+          this.validateRequest("findById", { args, context });
+          return await this.model.findOne({ _id: args._id });
+        });
   }
 
   /** Find many by id values */
-  private getFindMany(): ResolverProps {
+  private getFindMany() {
+    return this.props.typeComposer.mongooseResolvers
+      .findMany()
+      .wrap(r => {
+        r.removeArg(["filter", "skip", "limit"]);
+        r.addArgs({ ids: ["MongoID"] });
+        return r;
+      })
+      .wrapResolve(() =>
+        async (rp: ResolverResolveParams<any, any, any>) => {
+          const { args, context } = rp;
+          this.validateRequest("findMany", { args, context });
+          const ids = rp.args.ids?.map((id: string) => new ObjectId(id));
+          return isEmpty(ids) ? [] : await this.model.find({ _id: { $in: ids } });
+        });
+  };
 
-    const resolver = this.props.typeComposer.mongooseResolvers.findMany();
-
-    // TODO: sort argument must be customized
-    resolver.removeArg(["filter", "skip", "limit"]);
-    resolver.addArgs({ ids: ["MongoID"] });
-
-    return {
-      name: this.resolverName,
-      type: () => [resolver.getOTC()],
-      args: resolver.getArgs(),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("findMany", req);
-        return await this.model.find({ _id: { $in: req.args.ids} });
-      }
-    }
+  private getFindOne() {
+    return this.props.typeComposer.mongooseResolvers.findOne()
+      .wrapResolve(() =>
+        async (rp: ResolverResolveParams<any, any, any>) => {
+          const { args, context } = rp;
+          this.validateRequest("findOne", { args, context });
+          return await this.model.findOne(args);
+        });
   }
 
-  private getFindOne(): ResolverProps {
-    return this.getResolverObject({
-      resolver: this.props.typeComposer.mongooseResolvers.findOne(),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("findOne", req);
-        return await this.model.findOne(req.args);
-      }
-    });
+  private getRemoveById() {
+    return this.props.typeComposer.mongooseResolvers.removeById()
+      .wrapResolve(() =>
+        async (rp: ResolverResolveParams<any, any, any>) => {
+          const { args, context } = rp;
+          this.validateRequest("removeById", { args, context });
+          return toRecord(await this.model.delete(new ObjectId(args.filter._id)));
+        });
   }
 
-  private getRemoveById(): ResolverProps {
-    return this.getResolverObject({
-      resolver: this.props.typeComposer.mongooseResolvers.removeById(),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("removeById", req);
-        return toRecord(await this.model.delete(req.args.filter._id));
-      }
-    });
-  }
-
-  private getUpdateById(): ResolverProps {
-    return this.getResolverObject({
-      resolver: this.props.typeComposer.mongooseResolvers.updateById(),
-      resolve: async (req: RequestContent) => {
-        this.validateRequest("updateById", req);
-        return toRecord(await this.model.findOneAndUpdate(req.args, req.args.record));
-      }
-    });
-  }
-
-  private getResolverObject(resolverBase:
-    {
-      resolver: Resolver<any, any, any>;
-      resolve: (req: RequestContent) => Promise<any>
-    }): ResolverProps {
-    return {
-      name: this.resolverName,
-      args: resolverBase.resolver.args,
-      type: () => resolverBase.resolver.getOTC(),
-      resolve: resolverBase.resolve
-    }
+  private getUpdateById() {
+    return this.props.typeComposer.mongooseResolvers.updateById()
+      .wrapResolve(() =>
+        async (rp: ResolverResolveParams<any, any, any>) => {
+          const { args, context } = rp;
+          this.validateRequest("updateById", { args, context });
+          return toRecord(await this.model.findOneAndUpdate(args, args.record));
+        });
   }
 
   private validateRequest(resolverType: TResolver, req: RequestContent) {
+    validateUserAccess(req.context, this.ignoreUserAccess)
     const validations = this.props.modelSet.requestValidations
       ? this.props.modelSet.requestValidations[resolverType] ?? []
       : [];

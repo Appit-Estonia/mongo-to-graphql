@@ -10,10 +10,13 @@ export interface Setup {
       modelSet: ModelSet;
       queries?: SchemaField[];
       mutations?: SchemaField[];
+      ignoreUserRequrestValidation?: boolean;
     };
   };
+  userIdPathInContext?: string;
   readonlyFields?: string[];
-  anonymousObjectTypeComposers?: ObjectTypeComposerDefinition<any, any>[];
+  nonModelTypeComposers?: ObjectTypeComposerDefinition<any, any>[];
+  userRequestValidation?: () => boolean;
 }
 
 export interface PopulateOption {
@@ -70,6 +73,8 @@ export type TResolver = keyof typeof resolverFactory;
 export interface SchemaField {
   name: string;
   permission: "none" | "read" | "write" | "execute";
+  ignoreUserAccess?: boolean;
+  userReferenceName?: string;
   mongooseResolver?: TResolver
   resolver?: ResolverDefinition;
 }

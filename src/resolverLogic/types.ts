@@ -17,6 +17,8 @@ export interface IResolveParams {
   queryModelName: string;
   description?: string;
   modelSet: ModelSet;
+  ignoreUserAccess?: boolean;
+  userReferenceName?: string;
   typeComposer: ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>;
 }
 

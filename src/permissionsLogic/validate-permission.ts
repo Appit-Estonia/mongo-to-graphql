@@ -1,5 +1,6 @@
 import { ResolverResolveParams, ResolverRpCb } from "graphql-compose";
 import mongoose from "mongoose";
+import { BadRequestError, getSetup } from "..";
 import { NotAuthorizedError } from "../errors/notAuthorized";
 import { PERMISSION_VALUES, TOrganisationFeaturePermissionKeys } from "./permissions";
 
@@ -60,4 +61,25 @@ const getRequestArgs = (rp: ResolverResolveParams<any, any, any>) => {
     ...(rp.args || {}),
     filter,
   };
+}
+
+export const getUserId = (context: any) => {
+  const path = getSetup().userIdPathInContext?.split(".");
+  if(!path) { return null; }
+
+  const userIdProp = path.pop()!;
+  const last = path.reduce((_, p) => {
+    return context[p];
+  }, {}) as any;
+
+  if(!last) {
+    throw new Error(`User id is missing in context path '${getSetup().userIdPathInContext}'`)
+  }
+  return new ObjectId(last[userIdProp]);
+}
+
+export const validateUserAccess = (context: any, ignore?: boolean) => {
+  if(!ignore && !!getSetup().userIdPathInContext && !getUserId(context)) {
+    throw new BadRequestError("error.no_access");
+  }
 }
