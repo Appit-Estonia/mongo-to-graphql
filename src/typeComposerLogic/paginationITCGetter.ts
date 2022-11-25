@@ -1,5 +1,5 @@
 import { schemaComposer } from "graphql-compose";
-import { capitalize } from "lodash";
+import { capitalizeFirstOnly } from "../context/helpers";
 import { ComparisonTypes } from "../context/types/request";
 import { PagiantionTypeProps } from "./types";
 
@@ -17,7 +17,7 @@ class PaginationInputTypeCreator {
 
   private getPaginationFilterITC() {
     return schemaComposer.createInputTC({
-      name: capitalize(this.modelName) + "PaginationFilterInput",
+      name: capitalizeFirstOnly(this.modelName) + "PaginationFilterInput",
       fields: {
         and: () => [this.getFilterClauseITC("And")],
         or: () => [this.getFilterClauseITC("Or")],

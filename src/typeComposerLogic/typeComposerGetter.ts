@@ -1,9 +1,10 @@
 import { schemaComposer } from "graphql-compose";
 import { composeMongoose } from "graphql-compose-mongoose";
-import { capitalize, reduce } from "lodash";
+import { reduce } from "lodash";
 import { getModelSetup, getSetup } from "../context";
 import { populateProps } from "../resolverLogic/helpers";
 import { getResolverTypes } from "../context/resolverTypes";
+import { capitalizeFirstOnly } from "../context/helpers";
 
 
 export const getOTC = (modelName: string) => {
@@ -29,7 +30,7 @@ export const getOTC = (modelName: string) => {
       if (p.fields && p.fields[key]) {
         tc.addNestedFields({
           [prop]: getResolverTypes({
-            name: modelName + capitalize(k),
+            name: modelName + capitalizeFirstOnly(p.displayName || k),
             fields: {
               ...(isArray ? [fields] : fields)
             },

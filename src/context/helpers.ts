@@ -29,3 +29,7 @@ const getComposerScalars = () => {
     ...COMPOSER_SCALARS.map(s => `[${s}]!`),
   ]
 }
+
+export const capitalizeFirstOnly = (s: string) => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

@@ -21,8 +21,9 @@ export interface Setup {
 
 export interface PopulateOption {
   key: string;
+  displayName?: string;
   options?: PopulateOptions;
-  fields?: { [key: string]: string };
+  fields: { [key: string]: string };
 }
 
 export interface ModelSet {
