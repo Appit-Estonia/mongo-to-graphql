@@ -43,7 +43,7 @@ export const getResolverTypes = (draftType: TResolverType) => {
       ...result,
       ...(type === "model" ? getModelFields(key, value) : { [key]: value }),
     };
-  }, {})
+  }, {});
 
   const tc = schemaComposer.createObjectTC({ name, fields: fieldsType });
   return isArrayTypeFields ? [tc] : tc;

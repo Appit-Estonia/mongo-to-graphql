@@ -1,6 +1,7 @@
 import { ObjectTypeComposerArgumentConfigMapDefinition, ObjectTypeComposerDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
 import { resolverFactory } from "graphql-compose-mongoose";
 import { PopulateOptions } from "mongoose";
+import { TResolver } from "../../resolverLogic/types";
 import { RequestContent } from "./request";
 
 
@@ -10,7 +11,6 @@ export interface Setup {
       modelSet: ModelSet;
       queries?: SchemaField[];
       mutations?: SchemaField[];
-      ignoreUserRequrestValidation?: boolean;
     };
   };
   userIdPathInContext?: string;
@@ -28,14 +28,11 @@ export interface PopulateOption {
 export interface ModelSet {
   /** Mongoose model */
   model: any;
+  populates?: PopulateOption[];
   /** Parameters for displaying data */
   displayFields?: DisplayField[];
   /** Query filters */
   filters?: Filter[];
-  paginationOptions?: {
-    /** Query population parameters */
-    populates: PopulateOption[];
-  };
   /** Validations before executing query */
   requestValidations?: {
     [key: string]: ((requestContent: RequestContent) => void)[];
@@ -67,8 +64,6 @@ export interface CombinedFields {
     additionalFields?: ObjectTypeComposerArgumentConfigMapDefinition<any>;
   }
 }
-
-export type TResolver = keyof typeof resolverFactory;
 
 export interface SchemaField {
   name: string;

@@ -1,5 +1,6 @@
 import { Document } from "mongoose";
-import { Sorting, TResolver } from "../context/types/setup";
+import { Sorting } from "../context/types/setup";
+import { TResolver } from "./types";
 
 
 export const getSorting = (sortables: Sorting[], sortNames: string[]) => {
@@ -33,3 +34,12 @@ export const toRecord = (doc: Document | undefined | null) => {
 }
 
 export const getResolverName = (resolverType: TResolver, queryModelName: string) => resolverType + queryModelName;
+
+export const populateProps = (pathKey: string) => {
+  const clean = (p: string) => p.replaceAll("[", "").replace("]", "")
+  return {
+    key: clean(pathKey),
+    root: clean(pathKey.split(".")[0]),
+    isArray: pathKey.startsWith("["),
+  }
+}

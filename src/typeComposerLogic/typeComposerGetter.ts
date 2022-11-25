@@ -1,27 +1,43 @@
 import { schemaComposer } from "graphql-compose";
-import { composeMongoose, ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
-import { Document } from "mongoose"
+import { composeMongoose } from "graphql-compose-mongoose";
+import { capitalize, reduce } from "lodash";
 import { getModelSetup, getSetup } from "../context";
-import { ModelSet } from "../context/types/setup";
+import { populateProps } from "../resolverLogic/helpers";
+import { getResolverTypes } from "../context/resolverTypes";
 
-class TypeComposerCreator {
 
-  private typeComposer: ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>;
-  private modelSet: ModelSet;
-
-  constructor(modelSet: ModelSet) {
-    this.modelSet = modelSet;
-    this.typeComposer = composeMongoose(this.modelSet.model);
+export const getOTC = (modelName: string) => {
+  if(schemaComposer.isObjectType(modelName)) {
+    return schemaComposer.getOTC(modelName);
   }
 
-  public getOTC() {
-    this.typeComposer.getInputTypeComposer().removeField(getSetup().readonlyFields ?? []);
-    return this.typeComposer;
-  }
-}
+  const modelSet = getModelSetup(modelName).modelSet;
+  const tc = composeMongoose(modelSet.model);
 
-export const getOTC = (queryTable: string) => {
-  return schemaComposer.isObjectType(queryTable)
-    ? schemaComposer.getOTC(queryTable)
-    : new TypeComposerCreator(getModelSetup(queryTable).modelSet).getOTC();
+  tc.getInputTypeComposer().removeField(getSetup().readonlyFields ?? []);
+
+  getModelSetup(modelName).modelSet?.populates?.forEach(p => {
+    let propPath: string[] = [];
+
+    p.key.split(".").forEach(k => {
+
+      const { isArray, key } = populateProps(k);
+      propPath = [...propPath, key];
+      const prop = propPath.join(".");
+      const fields = reduce(p.fields, (result, value, key) => ({ ...result, ...{ [key]: `*${value}` } }), {});
+
+      if (p.fields && p.fields[key]) {
+        tc.addNestedFields({
+          [prop]: getResolverTypes({
+            name: modelName + capitalize(k),
+            fields: {
+              ...(isArray ? [fields] : fields)
+            },
+          }),
+        });
+      }
+    });
+  });
+  
+  return tc;
 }

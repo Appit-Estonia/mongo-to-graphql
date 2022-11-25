@@ -1,7 +1,5 @@
-import { groupBy, isEmpty, map, omit, reduce } from "lodash";
+import { groupBy, isEmpty } from "lodash";
 import mongoose, { Types } from "mongoose";
-import { getPagiantionFilterITC } from "../typeComposerLogic/paginationITCGetter";
-import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
 import { getUserId, ObjectId } from "../permissionsLogic/validate-permission";
 import { getSorting } from "./helpers";
 import { BadRequestError } from "../errors/badRequestError";
@@ -9,6 +7,7 @@ import { PagiantionTypeProps } from "../typeComposerLogic/types";
 import { ModelSet } from "../context/types/setup";
 import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } from "../context/types/request";
 import { getSetup } from "../context";
+import { getPopulates } from "./resolverGetter";
 
 type TFilterValue = string | number | RegExp | Types.ObjectId | { [comp: string]: string | number | RegExp | Types.ObjectId; };
 
@@ -29,7 +28,7 @@ export interface IColumnSettings {
   width?: number;
 }
 
-class PaginationResolverCreator {
+export class PaginationResolveCreator {
 
   private queryModelName: string;
 
@@ -37,7 +36,7 @@ class PaginationResolverCreator {
     this.queryModelName = props.queryModelName;
   }
 
-  public getResolver = async (req: RequestContent, modelSet: ModelSet) => {
+  public getResolve = async (req: RequestContent, modelSet: ModelSet) => {
 
     const { page, perPage } = req.args;
     const firstPage = 1;
@@ -67,8 +66,6 @@ class PaginationResolverCreator {
       ...{ and: ands }
     };
 
-    const populateFields = modelSet.paginationOptions?.populates?.map(p => p.key);
-
     const filter = await this.getPaginationFilter(paginationFilter, modelSet);
     const selectedFieldsNames = selectedFields.map(s => s.key);
     const count = await model.count(filter).select(selectedFieldsNames);
@@ -79,28 +76,7 @@ class PaginationResolverCreator {
         limit: req.args.perPage,
         skip: (currentPage - 1) * req.args.perPage ?? 0,
         sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
-      }).populate((modelSet.paginationOptions?.populates?.map(p => {
-        return Object.values(p.fields ?? {}).map(f => {
-          const fields = f.split(":")[1];
-          return {
-            path: p.key,
-            select: fields ? fields.split(" ") : undefined
-          }
-        })
-      }) ?? [])).lean())
-      // .map((i: any) => {
-      //   return {
-      //     // remove populated properties
-      //     ...omit(i, populateFields ?? []),
-      //     // merge properties of removed parent property
-      //     ...reduce(i, (result, value, key) => {
-      //       return {
-      //         ...result,
-      //         ...(populateFields?.includes(key) ? omit(value, "_id") : {})
-      //       }
-      //     }, {}),
-      //   }
-      // });
+      }).populate(getPopulates(modelSet)).lean())
 
     return {
       count,
@@ -150,7 +126,6 @@ class PaginationResolverCreator {
   }
 
   private async getPaginationFilter(paginationFilter: PaginationFilter, modelSet: ModelSet) {
-
     const getFilters = (filters: BaseFilterParams[]) => {
       const res: { [key: string]: TFilterValue }[] = [];
       (filters).forEach(o => {
@@ -218,36 +193,6 @@ class PaginationResolverCreator {
   }
 }
 
-export const getPaginationResolver = (queryModelName: string, modelSet: ModelSet) => {
-  return {
-    name: queryModelName + "PaginationData",
-    type: () => getPaginationOTC({ queryModelName, modelSet }),
-    args: {
-      paginationFilter: () => getPagiantionFilterITC(queryModelName),
-      page: {
-        type: "Int!",
-        defaultValue: 1
-      },
-      perPage: {
-        type: "Int!",
-        defaultValue: 20
-      },
-      sort: {
-        type: "[String]",
-        description: "Use values columnname_asc or columnname_desc"
-      }
-    },
-    resolve: async (req: RequestContent) => {
-      return new PaginationResolverCreator({ queryModelName }).getResolver(req, modelSet);
-    }
-  }
-}
-
 const isValidObjectId = (id: string) => {
-  if (ObjectId.isValid(id)) {
-    if ((String)(new ObjectId(id)) === id)
-      return true;
-    return false;
-  }
-  return false;
+  return ObjectId.isValid(id) && (String)(new ObjectId(id)) === id;
 }

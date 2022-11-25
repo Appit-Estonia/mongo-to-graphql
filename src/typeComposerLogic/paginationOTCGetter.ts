@@ -1,22 +1,16 @@
 import { schemaComposer } from "graphql-compose";
-import { ModelSet } from "../context/types/setup";
 import { getOTC } from "./typeComposerGetter";
 import { PagiantionTypeProps } from "./types";
-import { capitalize, reduce } from "lodash";
-import { getModelSetup } from "../context";
-import { getResolverTypes } from "../context/resolverTypes";
 
 class PaginationOutputTypeCreator {
 
   private queryModelName: string;
-  private modelSet: ModelSet;
 
   constructor(props: PagiantionTypeProps) {
     this.queryModelName = props.queryModelName;
     if (!props.modelSet) {
       throw new Error("Model set is missing for pagination OTC creator")
     }
-    this.modelSet = props.modelSet;
   }
 
   public get() {
@@ -28,40 +22,15 @@ class PaginationOutputTypeCreator {
       name: this.queryModelName + "PaginationType",
       fields: {
         count: "Int!",
-        items: () => {
-
-          const populates = getModelSetup(this.queryModelName).modelSet.paginationOptions?.populates;
-          const otc = schemaComposer.createObjectTC({
-            name: this.queryModelName + "PaginationTypeItems",
-            fields: getOTC(this.queryModelName).getFields()
-          });
-
-          populates?.forEach(p => {
-            let propPath: string[] = [];
-            p.key.split(".").forEach(k => {
-
-              propPath = [...propPath, k];
-              const prop = propPath.join(".");
-
-              if (p.fields && p.fields[k]) {
-                otc.removeField(prop);
-                otc.addNestedFields({
-                  [prop]: getResolverTypes({
-                    name: this.queryModelName + "PaginationTypeItem" + capitalize(k),
-                    fields: reduce(p.fields, (result, value, key) => ({ ...result, ...{ [key]: `*${value}` } }), {})
-                  })
-                });
-              }
-            });
-          });
-
-          return [otc]
-        },
-        pageInfo: () => this.getPaginationInfoType(),
         displayFields: () => [this.getPaginationDisplayFieldType()],
-        filters: () => [this.getFilterType()]
+        items: [schemaComposer.createObjectTC({
+          name: this.queryModelName + "PaginationItems",
+          fields: getOTC(this.queryModelName).getFields()
+        })],
+        filters: () => [this.getFilterType()],
+        pageInfo: () => this.getPaginationInfoType(),
       }
-    })
+    });
   }
 
   private getPaginationInfoType() {

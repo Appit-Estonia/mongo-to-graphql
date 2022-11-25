@@ -1,13 +1,14 @@
 import { schemaComposer } from "graphql-compose";
+import { capitalize } from "lodash";
 import { ComparisonTypes } from "../context/types/request";
 import { PagiantionTypeProps } from "./types";
 
 class PaginationInputTypeCreator {
 
-  private queryModel: string;
+  private modelName: string;
 
   constructor(props: PagiantionTypeProps) {
-    this.queryModel = (props.queryModelName as string).toLowerCase();
+    this.modelName = props.queryModelName;
   }
 
   public getFilterOTC() {
@@ -16,7 +17,7 @@ class PaginationInputTypeCreator {
 
   private getPaginationFilterITC() {
     return schemaComposer.createInputTC({
-      name: this.queryModel + "PaginationFilterInput",
+      name: capitalize(this.modelName) + "PaginationFilterInput",
       fields: {
         and: () => [this.getFilterClauseITC("And")],
         or: () => [this.getFilterClauseITC("Or")],
@@ -27,7 +28,7 @@ class PaginationInputTypeCreator {
 
   private getFilterClauseITC(type: "And" | "Or") {
     return schemaComposer.createInputTC({
-      name: this.queryModel + type + "FilterClauseInput",
+      name: this.modelName + type + "FilterClauseInput",
       description: "Use $ for nested keys, f.ex event$key (event.key)",
       fields: {
         fieldKey: "String!",
@@ -39,7 +40,7 @@ class PaginationInputTypeCreator {
 
   private getDefinedFilterITC() {
     return schemaComposer.createInputTC({
-      name: this.queryModel + "DefinedFilterInput",
+      name: this.modelName + "DefinedFilterInput",
       fields: {
         filterKey: "String!",
         optionKey: "String!"

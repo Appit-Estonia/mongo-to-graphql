@@ -3,7 +3,7 @@ import { ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoos
 import { Document } from "mongoose";
 import { getBaseResolver } from "../resolverLogic/resolverGetter";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
-import { ResolverDefinition, SchemaField, Setup } from "./types/setup";
+import { SchemaField, Setup } from "./types/setup";
 import { getResolverArg, getCombinedModelTypedArg } from "./resolverArgsTypes";
 import { getResolverModelType, getResolverTypes } from "./resolverTypes";
 import { validateUserAccess } from "../permissionsLogic/validate-permission";
@@ -37,7 +37,7 @@ export class MongoQL {
       setup.queries?.forEach(q => {
         queries = { ...queries, ...this.getSchemaFields(modelKey, q) }
       });
-      
+
       setup.mutations?.forEach(m => {
         mutations = { ...mutations, ...this.getSchemaFields(modelKey, m) }
       });
@@ -76,9 +76,10 @@ export class MongoQL {
     }));
   }
 
-  private addCustomResolver(modelKey: string, resolver: ResolverDefinition) {
+  private addCustomResolver(modelKey: string, field: SchemaField) {
 
-    const { args, name, type: draftType, ...resolverDefinitions } = resolver;
+    const { ignoreUserAccess, resolver } = field;
+    const { args, name, type: draftType, ...resolverDefinitions } = resolver!;
     const isModelType = isString(draftType);
 
     let schemaResolver = { ...resolverDefinitions, ...{ name }, };
@@ -107,7 +108,7 @@ export class MongoQL {
     getOTC(modelKey).addResolver(schemaResolver).wrapResolverResolve(name!,
       (next: ResolverRpCb<any, any, any>) => (rp: ResolverResolveParams<any, any, any>) => {
         const { context } = rp;
-        validateUserAccess(context);
+        validateUserAccess(context, ignoreUserAccess);
         return next(rp);
       });
   }
@@ -119,7 +120,7 @@ export class MongoQL {
       this.addMongooseResolver(modelKey, field);
     }
     if (field.resolver) {
-      this.addCustomResolver(modelKey, field.resolver);
+      this.addCustomResolver(modelKey, field);
     }
 
     const resolverName = field.resolver ? field.resolver.name : field.mongooseResolver + modelKey;
