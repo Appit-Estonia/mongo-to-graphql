@@ -148,12 +148,16 @@ class ResolverCreator {
     return this.props.typeComposer.mongooseResolvers.pagination().wrap(r => {
       r.name = queryModelName + "PaginationData";
 
-      r.setArg("filter", () => getPagiantionFilterITC(queryModelName));
+      r.removeArg("filter")
+      r.setArg("paginationFilter", () => getPagiantionFilterITC(queryModelName));
       r.setArg("page", { type: "Int!", defaultValue: 1 });
       r.setArg("perPage", { type: "Int!", defaultValue: 20 });
 
-      const fields = getOTC(queryModelName).getFieldNames().map(f => `${f}_asc ${f}_desc`).join(" ");
-      r.setArg("paginationSort", { type: [`enum ${queryModelName}PaginationSort { ${fields} }`] });
+      // TODO: default sort should be removed, conflict with findMany sort
+      r.setArg("paginationSort", {
+        type: "[String]",
+        description: "Use values columnname_asc or columnname_desc"
+      });
 
       r.setType(getPaginationOTC({ queryModelName, modelSet }))
       return r;

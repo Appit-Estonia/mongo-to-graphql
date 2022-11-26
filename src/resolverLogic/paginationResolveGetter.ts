@@ -75,7 +75,9 @@ export class PaginationResolveCreator {
       {
         limit: req.args.perPage,
         skip: (currentPage - 1) * req.args.perPage ?? 0,
-        sort: req.args.sort ? getSorting(defaultFields.filter(d => !!d.sort).map(d => d.sort!) ?? [], req.args.sort) : {}
+        sort: req.args.paginationSort 
+          ? getSorting(defaultFields.filter(d => !!d.paginationSort).map(d => d.paginationSort!) ?? [], req.args.paginationSort) 
+          : {}
       }).populate(getPopulates(modelSet)).lean())
 
     return {
@@ -90,7 +92,7 @@ export class PaginationResolveCreator {
         hasNextPage: currentPage * per < count,
       },
       displayFields: defaultFields.map(d => {
-        const { sort, ...rest } = d;
+        const { paginationSort: sort, ...rest } = d;
         return {
           ...rest,
           ...{ sortable: !!sort }
@@ -110,7 +112,7 @@ export class PaginationResolveCreator {
         return {
           key: d.key.split(".")[0],
           visible: d.visible,
-          sortable: !!d.sort
+          sortable: !!d.paginationSort
         } as IColumnSettings
       }).filter(d => !!d.visible),
       defaultFields,

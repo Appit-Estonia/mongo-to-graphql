@@ -79,7 +79,7 @@ export interface DisplayField {
   key: string;
   name: string;
   visible: boolean;
-  sort?: Sorting;
+  paginationSort?: Sorting;
   searchable?: boolean;
 }
 
