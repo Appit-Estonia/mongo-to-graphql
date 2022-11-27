@@ -1,10 +1,16 @@
 import { CustomError } from "./customError";
 
-export declare class BadRequestError extends CustomError {
-  message: string;
-  statusCode: number;
-  constructor(message: string);
-  serializeErrors(): {
-    message: string;
-  }[];
+export class BadRequestError extends CustomError {
+  statusCode = 400;
+  constructor(public message: string) {
+    super(message); // only for server logging
+
+    Object.setPrototypeOf(this, BadRequestError.prototype)
+  }
+
+  serializeErrors() {
+    return [
+      { message: this.message }
+    ]
+  }
 }
