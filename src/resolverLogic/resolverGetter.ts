@@ -79,7 +79,9 @@ class ResolverCreator {
           ...args.record,
           ...(this.userRefenceName ? { [this.userRefenceName]: getUserId(context) } : {})
         }
-        return toRecord(await this.model.create(newObj).populate(getPopulates(this.props.modelSet)));
+
+        const newRecord = await this.model.create(newObj);
+        return toRecord(await newRecord.populate(getPopulates(this.props.modelSet)));
       });
   }
 
