@@ -32,8 +32,41 @@ class PaginationInputTypeCreator {
       description: "Use $ for nested keys, f.ex event$key (event.key)",
       fields: {
         fieldKey: "String!",
-        value: "String!",
-        comparison: () => this.getComparisonTC()
+
+        // string inputs
+        equals: "String",
+        not: "String",
+        like: "String",
+        in: "[String]",
+        notIn: "[String]",
+        inLike: "[String]",
+        lessThan: "String",
+        greaterThan: "String",
+        greaterOrEquals: "String",
+        lessOrEquals: "String",
+        between: () => this.getBetweenITC(type, "String"),
+
+        // number inputs
+        numberEquals: "Float",
+        numberNot: "Float",
+        numberIn: "[Float]",
+        numberNotIn: "[Float]",
+        numberLessThan: "Float",
+        numberGreaterThan: "Float",
+        numberGreaterOrEquals: "Float",
+        numberLessOrEquals: "Float",
+        numberBetween: () => this.getBetweenITC(type, "Number"),
+      }
+    })
+  }
+
+  private getBetweenITC(type: "And" | "Or", scalar: "Number" | "String") {
+    const fieldType = scalar === "Number" ? "Int!" : "String!";
+    return schemaComposer.createInputTC({
+      name: this.modelName + type + scalar + "BetweenFilter",
+      fields: {
+        from: fieldType,
+        to: fieldType,
       }
     })
   }
@@ -46,10 +79,6 @@ class PaginationInputTypeCreator {
         optionKey: "String!"
       }
     })
-  }
-
-  private getComparisonTC() {
-    return schemaComposer.createEnumTC(`enum Comparison { ${Object.keys(ComparisonTypes).join(" ")} }`);
   }
 }
 

@@ -9,7 +9,8 @@ import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } f
 import { getSetup } from "../context";
 import { getPopulates } from "./resolverGetter";
 
-type TFilterValue = string | number | RegExp | Types.ObjectId | { [comp: string]: string | number | RegExp | Types.ObjectId; };
+type TFilterValue = string | number | RegExp | Types.ObjectId;
+type TFilterValues = string[] | number[] | RegExp[] | Types.ObjectId[];
 
 interface DefinedFilterKeyPair {
   filterKey: string;
@@ -54,11 +55,7 @@ export class PaginationResolveCreator {
     }, modelSet);
 
     const ands = [
-      ...req.args?.paginationFilter?.and ?? [],
-      {
-        fieldKey: getSetup().userIdPathInContext?.split(".").reverse()[0] ?? "",
-        value: getUserId(req.context)?.toString() ?? "",
-      }
+      ...req.args?.paginationFilter?.and ?? []
     ];
 
     const paginationFilter = {
@@ -128,24 +125,48 @@ export class PaginationResolveCreator {
   }
 
   private async getPaginationFilter(paginationFilter: PaginationFilter, modelSet: ModelSet) {
+
+    const getLikeRegex = (value: string) => new RegExp(".*" + value + ".*", "i");
+    const getValue = (value: any) => isValidObjectId(value) ? new ObjectId(value) : value;
+
     const getFilters = (filters: BaseFilterParams[]) => {
-      const res: { [key: string]: TFilterValue }[] = [];
-      (filters).forEach(o => {
+      const res: { [key: string]: {[comparison: string]: TFilterValue | TFilterValues} }[] = [];
+      filters.forEach(o => {
+        const pushFilter = (value: undefined | TFilterValue | TFilterValues, comparison: string) => {
+          if(value) {
+            res.push({[o.fieldKey]: {[`$${comparison}`]: getValue(value)}});
+          }
+        }
+        
+        pushFilter(o.equals, "eq");
+        if(o.like) {
+          pushFilter(getLikeRegex(o.like), "eq");
+        }
+        pushFilter(o.not, "ne");
+        pushFilter(o.greaterThan, "gt");
+        pushFilter(o.lessThan, "lt");
+        pushFilter(o.greaterOrEquals, "gte");
+        pushFilter(o.lessOrEquals, "lte");
+        pushFilter(o.in, "in");
+        pushFilter(o.inLike?.map(i => getLikeRegex(i)), "in");
+        pushFilter(o.notIn, "nin");
+        if(o.between) {
+          res.push({ [o.fieldKey]: { "$gte": getValue(o.between.from), "$lte": getValue(o.between.to) } });
+        }
 
-        const comparison = ComparisonTypes[o.comparison ?? "eq"];
+        pushFilter(o.numberEquals, "eq");
+        pushFilter(o.numberNot, "ne");
+        pushFilter(o.numberGreaterThan, "gt");
+        pushFilter(o.numberLessThan, "lt");
+        pushFilter(o.numberGreaterOrEquals, "gte");
+        pushFilter(o.numberLessOrEquals, "lte");
+        pushFilter(o.numberIn, "in");
+        pushFilter(o.numberNotIn, "nin");
+        if(o.numberBetween) {
+          res.push({ [o.fieldKey]: { "$gte": getValue(o.numberBetween.from), "$lte": getValue(o.numberBetween.to) } });
+        }
 
-        // $ is use to as nested key separator, f.ex event$key is converted to event.key
-        (o.fieldKey.split("$")).forEach(nested => {
-          const value = comparison === "like"
-            ? new RegExp(".*" + o.value + ".*", "i")
-            : isValidObjectId(o.value)
-              ? new ObjectId(o.value)
-              : o.value;
-
-          res.push({ [nested.replaceAll("$", ".")]: comparison === "like" ? value : { [comparison]: value } })
-        })
       });
-
       return res;
     }
 

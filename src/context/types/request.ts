@@ -40,9 +40,37 @@ export const ComparisonTypes = { like: "like", eq: "$eq", gt: "$gt", gte: "$gte"
 export type TComparison = keyof typeof ComparisonTypes;
 
 export interface BaseFilterParams {
-  fieldKey: string;
-  value: string;
-  comparison?: TComparison;
+  fieldKey: "String!",
+
+  // string inputs
+  equals?: string;
+  not?: string;
+  like?: string;
+  in?: string[];
+  notIn?: string[];
+  inLike?: string[];
+  lessThan?: string;
+  greaterThan?: string;
+  greaterOrEquals?: string;
+  lessOrEquals?: string;
+  between?: {
+    from: string;
+    to: string;
+  };
+
+  // number inputs
+  numberEquals?: number;
+  numberNot?: number;
+  numberIn?: number[],
+  numberNotIn?: number[],
+  numberLessThan?: number;
+  numberGreaterThan?: number;
+  numberGreaterOrEquals?: number;
+  numberLessOrEquals?: number;
+  numberBetween?:  {
+    from: number;
+    to: number;
+  };
 }
 
 interface DefinedFilterParams {
