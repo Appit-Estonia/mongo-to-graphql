@@ -22,6 +22,7 @@ export interface CurrentUserPayload {
   firstname?: string;
   lastname?: string;
   isAdmin?: boolean;
+  isAdminLogin?: boolean;
   organisation: string;
   role: {
     organisation: string;

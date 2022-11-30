@@ -1,4 +1,5 @@
 import { ResolverResolveParams, ResolverRpCb } from "graphql-compose";
+import { get } from "lodash";
 import mongoose from "mongoose";
 import { BadRequestError, getSetup } from "..";
 import { NotAuthorizedError } from "../errors/notAuthorized";
@@ -64,22 +65,29 @@ const getRequestArgs = (rp: ResolverResolveParams<any, any, any>) => {
 }
 
 export const getUserId = (context: any) => {
-  const path = getSetup().userIdPathInContext?.split(".");
-  if(!path) { return null; }
+  return new ObjectId(getUserContextValue(context, "id"));
+}
 
-  const userIdProp = path.pop()!;
-  const last = path.reduce((_, p) => {
-    return context[p];
-  }, {}) as any;
+export const isAdminMode = (context: any) => {
+  return getUserContextValue(context, "hasAdminMode");
+}
 
-  if(!last) {
-    throw new Error(`User id is missing in context path '${getSetup().userIdPathInContext}'`)
+const getUserContextValue = (context: any, valueOf: "id" | "hasAdminMode") => {
+
+  if(!getSetup().userContextPaths) { return null; }
+
+  const path = getSetup().userContextPaths![valueOf];
+  const value = path ? get(context, path) : undefined;
+
+  if(value === undefined) {
+    throw new Error(`Value is missing in user context path '${valueOf}'`)
   }
-  return new ObjectId(last[userIdProp]);
+
+  return value;
 }
 
 export const validateUserAccess = (context: any, ignore?: boolean) => {
-  if(!ignore && !!getSetup().userIdPathInContext && !getUserId(context)) {
+  if(!ignore && !!getSetup().userContextPaths?.id && !getUserId(context)) {
     throw new BadRequestError("error.no_access");
   }
 }

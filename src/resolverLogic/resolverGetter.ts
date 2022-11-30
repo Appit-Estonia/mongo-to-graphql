@@ -2,14 +2,13 @@ import { Resolver, schemaComposer } from "graphql-compose";
 import { toRecord } from "./helpers";
 import { IResolveParams as ResolverCreatorProps, TResolver } from "./types";
 import { ObjectId } from "../validate-permission";
-import { RequestContent } from "../context/types/request";
+import { GraphContext, RequestContent } from "../context/types/request";
 import { ResolverResolveParams } from "graphql-compose/lib/Resolver";
 import { isEmpty } from "lodash";
-import { getUserId, validateUserAccess } from "../permissionsLogic/validate-permission";
+import { getUserId, isAdminMode, validateUserAccess } from "../permissionsLogic/validate-permission";
 import { getPagiantionFilterITC } from "../typeComposerLogic/paginationITCGetter";
 import { getPaginationOTC } from "../typeComposerLogic/paginationOTCGetter";
 import { PaginationResolveCreator } from "./paginationResolveGetter";
-import { getOTC } from "../typeComposerLogic/typeComposerGetter";
 import { ModelSet } from "../context/types/setup";
 
 class ResolverCreator {
@@ -75,12 +74,7 @@ class ResolverCreator {
       async (rp: ResolverResolveParams<any, any, any>) => {
         const { args, context } = rp;
         this.validateRequest("createOne", { args, context });
-        const newObj = {
-          ...args.record,
-          ...(this.userRefenceName ? { [this.userRefenceName]: getUserId(context) } : {})
-        }
-
-        const newRecord = await this.model.create(newObj);
+        const newRecord = await this.model.create({ ...args.record, ...this.getUserIdFilter(context), });
         return toRecord(await newRecord.populate(getPopulates(this.props.modelSet)));
       });
   }
@@ -91,7 +85,8 @@ class ResolverCreator {
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("findById", { args, context });
-          return await this.model.findOne({ _id: args._id }).populate(getPopulates(this.props.modelSet));
+          return await this.model.findOne(this.getWrappedFilter({ _id: args._id }, context))
+            .populate(getPopulates(this.props.modelSet));
         });
   }
 
@@ -109,7 +104,8 @@ class ResolverCreator {
           const { args, context } = rp;
           this.validateRequest("findMany", { args, context });
           const ids = rp.args.ids?.map((id: string) => new ObjectId(id));
-          return isEmpty(ids) ? [] : await this.model.find({ _id: { $in: ids } }).populate(getPopulates(this.props.modelSet));
+          return isEmpty(ids) ? [] : await this.model.find(this.getWrappedFilter({ _id: { $in: ids } }, context))
+            .populate(getPopulates(this.props.modelSet));
         });
   };
 
@@ -119,7 +115,8 @@ class ResolverCreator {
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("findOne", { args, context });
-          return await this.model.findOne(args).populate(getPopulates(this.props.modelSet));
+          return await this.model.findOne(this.getWrappedFilter(args, context))
+            .populate(getPopulates(this.props.modelSet));
         });
   }
 
@@ -129,7 +126,8 @@ class ResolverCreator {
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("removeById", { args, context });
-          return toRecord(await this.model.delete(new ObjectId(args.filter._id)).populate(getPopulates(this.props.modelSet)));
+          return toRecord(await this.model.delete(this.getWrappedFilter(new ObjectId(args.filter._id), context))
+            .populate(getPopulates(this.props.modelSet)));
         });
   }
 
@@ -139,7 +137,8 @@ class ResolverCreator {
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("updateById", { args, context });
-          return toRecord(await this.model.findOneAndUpdate(args, args.record).populate(getPopulates(this.props.modelSet)));
+          return toRecord(await this.model.findOneAndUpdate(this.getWrappedFilter(args, context), args.record)
+            .populate(getPopulates(this.props.modelSet)));
         });
   }
 
@@ -167,6 +166,10 @@ class ResolverCreator {
       async (rp: ResolverResolveParams<any, any, any>) => {
         const { args, context } = rp;
         this.validateRequest("pagination", { args, context });
+        if (!isAdminMode(context) && this.userRefenceName) {
+          if (!args.paginationFilter) { args.paginationFilter = {}; }
+          args.paginationFilter = this.getWrappedPaginationFilter(args.paginationFilter, context);
+        }
         return new PaginationResolveCreator({ queryModelName }).getResolve({ args, context }, modelSet);
       });
   }
@@ -178,6 +181,24 @@ class ResolverCreator {
       : [];
 
     validations.forEach((v: any) => v(req));
+  }
+
+  private getUserIdFilter(context: GraphContext) {
+    return this.userRefenceName ? { [this.userRefenceName]: getUserId(context) } : {}
+  }
+
+  private getWrappedFilter(filter: any, context: GraphContext) {
+    return { ...filter, ...(isAdminMode(context) ? {} : this.getUserIdFilter(context)), };
+  }
+
+  private getWrappedPaginationFilter(paginationFilter: any, context: GraphContext) {
+
+    if (isAdminMode(context)) { return paginationFilter; }
+
+    const userFilter = { fieldKey: this.userRefenceName, equals: getUserId(context) };
+    const and = paginationFilter.and ? [...paginationFilter.and, userFilter] : [userFilter];
+
+    return { ...paginationFilter ?? {}, ...{ and } };
   }
 }
 

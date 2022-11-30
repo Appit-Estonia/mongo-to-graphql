@@ -1,5 +1,4 @@
 import { ObjectTypeComposerArgumentConfigMapDefinition, ObjectTypeComposerDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
-import { resolverFactory } from "graphql-compose-mongoose";
 import { PopulateOptions } from "mongoose";
 import { TResolver } from "../../resolverLogic/types";
 import { RequestContent } from "./request";
@@ -13,7 +12,10 @@ export interface Setup {
       mutations?: SchemaField[];
     };
   };
-  userIdPathInContext?: string;
+  userContextPaths?: {
+    id?: string;
+    hasAdminMode?: string;
+  };
   readonlyFields?: string[];
   nonModelTypeComposers?: ObjectTypeComposerDefinition<any, any>[];
   userRequestValidation?: () => boolean;
