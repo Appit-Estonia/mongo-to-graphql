@@ -140,7 +140,7 @@ export class PaginationResolveCreator {
         
         pushFilter(o.equals, "eq");
         if(o.like) {
-          pushFilter(getLikeRegex(o.like), "eq");
+          pushFilter(getLikeRegex(o.like), "regex");
         }
         pushFilter(o.not, "ne");
         pushFilter(o.greaterThan, "gt");
