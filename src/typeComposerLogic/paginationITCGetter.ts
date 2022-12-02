@@ -56,6 +56,9 @@ class PaginationInputTypeCreator {
         numberGreaterOrEquals: "Float",
         numberLessOrEquals: "Float",
         numberBetween: () => this.getBetweenITC(type, "Number"),
+
+        // boolean inputs
+        booleanEquals: "Boolean",
       }
     })
   }

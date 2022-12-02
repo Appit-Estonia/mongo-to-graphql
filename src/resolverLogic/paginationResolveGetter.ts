@@ -9,7 +9,7 @@ import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } f
 import { getSetup } from "../context";
 import { getPopulates } from "./resolverGetter";
 
-type TFilterValue = string | number | RegExp | Types.ObjectId;
+type TFilterValue = boolean | string | number | RegExp | Types.ObjectId;
 type TFilterValues = string[] | number[] | RegExp[] | Types.ObjectId[];
 
 interface DefinedFilterKeyPair {
@@ -165,6 +165,8 @@ export class PaginationResolveCreator {
         if(o.numberBetween) {
           res.push({ [o.fieldKey]: { "$gte": getValue(o.numberBetween.from), "$lte": getValue(o.numberBetween.to) } });
         }
+
+        pushFilter(o.booleanEquals, "eq");
 
       });
       return res;

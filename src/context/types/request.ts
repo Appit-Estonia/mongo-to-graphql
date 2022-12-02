@@ -71,6 +71,9 @@ export interface BaseFilterParams {
     from: number;
     to: number;
   };
+
+  // boolean inputs
+  booleanEquals?: boolean;
 }
 
 interface DefinedFilterParams {
