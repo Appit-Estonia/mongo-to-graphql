@@ -79,10 +79,6 @@ const getUserContextValue = (context: any, valueOf: "id" | "hasAdminMode") => {
   const path = getSetup().userContextPaths![valueOf];
   const value = path ? get(context, path) : undefined;
 
-  if(value === undefined) {
-    throw new Error(`Value is missing in user context path '${valueOf}'`)
-  }
-
   return value;
 }
 
