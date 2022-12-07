@@ -17,7 +17,8 @@ export interface Setup {
     hasAdminMode?: string;
   };
   readonlyFields?: string[];
-  nonModelTypeComposers?: ObjectTypeComposerDefinition<any, any>[];
+  // TODO: type should be reconsidered
+  nonModelTypeComposers?: { name: string; fields: { [key: string]: any } }[];
   userRequestValidation?: () => boolean;
 }
 
