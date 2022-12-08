@@ -35,3 +35,13 @@ const getComposerScalars = () => {
 export const capitalizeFirstOnly = (s: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+export const replaceAll = (value: string, replacebles: string | string[], newValue: string) => {
+  if(Array.isArray(replacebles)) {
+    replacebles.forEach(r => {
+      value = value.replace(r, newValue);
+    });
+    return value;
+  }
+  return value.replace(replacebles, newValue);
+}

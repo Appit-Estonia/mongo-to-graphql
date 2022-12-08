@@ -1,7 +1,7 @@
 import { isString, schemaComposer } from "graphql-compose";
 import { isArray, isEmpty, reduce } from "lodash";
 import { getOTC } from "../typeComposerLogic/typeComposerGetter";
-import { getFieldValueType } from "./helpers";
+import { getFieldValueType, replaceAll } from "./helpers";
 import { TField, TResolverType } from "./types/setup";
 
 export const getResolverModelType = (draftType: TResolverType) => {
@@ -20,8 +20,9 @@ export const getResolverTypes = (draftType: TResolverType) => {
 
   const getModelFields = (fieldKey: string, fieldValue: string) => {
     const mergeFields = fieldValue.startsWith("*");
+    const isArray = fieldValue.startsWith("[");
     const split = fieldValue.split(":");
-    const otc = getOTC(split[0].replace("*", ""));
+    const otc = getOTC(replaceAll(split[0], ["*", "[", "]"], ""));
     const fieldNames = split[1] ? split[1].split(" ") : [];
 
     const selectedFields = reduce(fieldNames, (result, value) => {
@@ -32,7 +33,9 @@ export const getResolverTypes = (draftType: TResolverType) => {
       return isEmpty(selectedFields) ? otc.getFields() : selectedFields;
     } else {
       return {
-        [fieldKey]: isEmpty(selectedFields) ? otc : selectedFields
+        [fieldKey]: isEmpty(selectedFields) 
+          ? isArray ? [otc] : otc 
+          : selectedFields
       }
     }
   }
