@@ -33,4 +33,5 @@ export interface CurrentUserPayload {
       [K in keyof typeof userFeatures]: TPermissionType;
     };
   };
+  [key: string]: any;
 }

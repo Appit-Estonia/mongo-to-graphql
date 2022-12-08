@@ -27,6 +27,8 @@ const getComposerScalars = () => {
     ...COMPOSER_SCALARS.map(s => `${s}!`),
     ...COMPOSER_SCALARS.map(s => `[${s}]`),
     ...COMPOSER_SCALARS.map(s => `[${s}]!`),
+    ...COMPOSER_SCALARS.map(s => `[${s}!]`),
+    ...COMPOSER_SCALARS.map(s => `[${s}!]!`),
   ]
 }
 
