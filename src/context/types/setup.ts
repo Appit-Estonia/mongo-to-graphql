@@ -18,7 +18,7 @@ export interface Setup {
   };
   readonlyFields?: string[];
   // TODO: type should be reconsidered
-  nonModelTypeComposers?: { name: string; fields: { [key: string]: any } }[];
+  nonModelTypeComposers?: TResolverType[];
   userRequestValidation?: () => boolean;
 }
 

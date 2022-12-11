@@ -28,7 +28,9 @@ export class MongoQL {
     mqSetup = setup;
 
     setup.nonModelTypeComposers?.forEach(t => {
-      schemaComposer.createObjectTC(t)
+      const isModelType = isString(t);
+      const c = isModelType ? getResolverModelType(t) : getResolverTypes(t)
+      schemaComposer.add(c);
     });
 
     for (const modelKey in this.setup.models) {
