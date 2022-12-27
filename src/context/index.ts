@@ -116,8 +116,6 @@ export class MongoQL {
   }
 
   private getSchemaFields(modelKey: string, field: SchemaField) {
-    let res = {};
-
     if (field.mongooseResolver) {
       this.addMongooseResolver(modelKey, field);
     }
@@ -128,6 +126,6 @@ export class MongoQL {
     const resolverName = field.resolver ? field.resolver.name : field.mongooseResolver + modelKey;
     const otc = getOTC(modelKey);
 
-    return { [field.name]: otc.getResolver(resolverName!) }
+    return { [field.name]: otc.getResolver(resolverName!).withMiddlewares(field.middlewares || []) }
   }
 }

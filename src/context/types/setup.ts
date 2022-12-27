@@ -1,4 +1,4 @@
-import { ObjectTypeComposerArgumentConfigMapDefinition, ObjectTypeComposerDefinition, ResolverDefinition as ResolverDefinitionBase } from "graphql-compose";
+import { ObjectTypeComposerArgumentConfigMapDefinition, ObjectTypeComposerDefinition, ResolverDefinition as ResolverDefinitionBase, ResolverMiddleware } from "graphql-compose";
 import { PopulateOptions } from "mongoose";
 import { TResolver } from "../../resolverLogic/types";
 import { RequestContent } from "./request";
@@ -74,7 +74,8 @@ export interface SchemaField {
   permission: "none" | "read" | "write" | "execute";
   ignoreUserAccess?: boolean;
   userReferenceName?: string;
-  mongooseResolver?: TResolver
+  mongooseResolver?: TResolver;
+  middlewares?: ResolverMiddleware<any, any>[];
   resolver?: ResolverDefinition;
 }
 

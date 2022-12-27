@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export const userFeatures = Object.fromEntries((process.env.MONGO_TO_GRAPHQL_USER_FEATURES ?? "ADMIN,USER")
   .split(",")
   .map(f => [f.trim()]));
@@ -15,10 +17,13 @@ export declare type TPermissionsObject = {
   [key in TOrganisationFeaturePermissionKeys]?: TPermissionType;
 }
 
+export const ObjectId = mongoose.Types.ObjectId;
+
 export interface CurrentUserPayload {
   id: string;
   accountId: string;
   email: string;
+  profileId?: string;
   firstname?: string;
   lastname?: string;
   isAdmin?: boolean;
