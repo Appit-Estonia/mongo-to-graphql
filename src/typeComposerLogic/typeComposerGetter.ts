@@ -1,5 +1,5 @@
-import { schemaComposer } from "graphql-compose";
-import { composeMongoose } from "graphql-compose-mongoose";
+import { ObjectTypeComposer, schemaComposer } from "graphql-compose";
+import { composeMongoose, ObjectTypeComposerWithMongooseResolvers } from "graphql-compose-mongoose";
 import { reduce } from "lodash";
 import { getModelSetup, getSetup } from "../context";
 import { populateProps } from "../resolverLogic/helpers";
@@ -8,12 +8,22 @@ import { capitalizeFirstOnly } from "../context/helpers";
 
 
 export const getOTC = (modelName: string) => {
-  if(schemaComposer.isObjectType(modelName)) {
+  if (schemaComposer.isObjectType(modelName)) {
     return schemaComposer.getOTC(modelName);
   }
 
   const modelSet = getModelSetup(modelName).modelSet;
-  const tc = composeMongoose(modelSet.model);
+
+  let tc: ObjectTypeComposer<any, any> | ObjectTypeComposerWithMongooseResolvers<any, any>;
+
+  // if not model based (mongoose) model, set composer name as setup key
+  const isModelTyped = !!modelSet.model.name;
+  if (isModelTyped) {
+    tc = composeMongoose(modelSet.model);
+  } else {
+    modelSet.model.name = modelName;
+    tc = schemaComposer.createObjectTC(modelSet.model);
+  }
 
   tc.getInputTypeComposer().removeField(getSetup().readonlyFields ?? []);
 
