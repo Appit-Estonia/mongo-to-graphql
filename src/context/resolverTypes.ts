@@ -22,7 +22,7 @@ export const getResolverTypes = (draftType: TResolverType) => {
     const mergeFields = fieldValue.startsWith("*");
     const isArray = fieldValue.startsWith("[");
     const split = fieldValue.split(":");
-    const otc = getOTC(replaceAll(split[0], ["*", "[", "]"], ""));
+    const otc = getOTC(replaceAll(split[0], ["*", "[", "]", "!"], ""));
     const fieldNames = split[1] ? split[1].split(" ") : [];
 
     const selectedFields = reduce(fieldNames, (result, value) => {
@@ -33,13 +33,13 @@ export const getResolverTypes = (draftType: TResolverType) => {
       return isEmpty(selectedFields) ? otc.getFields() : selectedFields;
     } else {
       return {
-        [fieldKey]: isEmpty(selectedFields) 
-          ? isArray ? [otc] : otc 
+        [fieldKey]: isEmpty(selectedFields)
+          ? isArray ? [otc] : otc
           : selectedFields
       }
     }
   }
-  
+
   const fieldsType = reduce(fields, (result, value, key) => {
     const type = getFieldValueType(value);
     return {
@@ -49,5 +49,16 @@ export const getResolverTypes = (draftType: TResolverType) => {
   }, {});
 
   const tc = schemaComposer.createObjectTC({ name, fields: fieldsType });
+
+  // hackish, make fields as required
+  for (const key in tc.getFields()) {
+    const draftField = (isArray(dFields) ? (dFields as TField[])[0] : (dFields as TField))[key];
+    if (!!draftField) {
+      if (draftField.endsWith("!")) {
+        tc.makeFieldNonNull(key)
+      }
+    }
+  }
+
   return isArrayTypeFields ? [tc] : tc;
 }

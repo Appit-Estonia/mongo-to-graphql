@@ -65,7 +65,7 @@ export class MongoQL {
   private addMongooseResolver(modelKey: string, schemaField: SchemaField) {
     const { ignoreUserAccess, mongooseResolver, name, userReferenceName, resolverWrapper } = schemaField;
 
-    if(!mongooseResolver) {
+    if (!mongooseResolver) {
       throw new Error(`Missing resolver for field '${name}'`)
     }
 
