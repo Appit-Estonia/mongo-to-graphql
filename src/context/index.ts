@@ -63,7 +63,7 @@ export class MongoQL {
   }
 
   private addMongooseResolver(modelKey: string, schemaField: SchemaField) {
-    const { ignoreUserAccess, mongooseResolver, name, userReferenceName } = schemaField;
+    const { ignoreUserAccess, mongooseResolver, name, userReferenceName, resolverWrapper } = schemaField;
 
     if(!mongooseResolver) {
       throw new Error(`Missing resolver for field '${name}'`)
@@ -74,6 +74,7 @@ export class MongoQL {
       queryModelName: modelKey,
       ignoreUserAccess,
       userReferenceName,
+      resolverWrapper,
       typeComposer: getOTC(modelKey) as ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>
     }));
   }

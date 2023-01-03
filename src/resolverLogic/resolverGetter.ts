@@ -20,6 +20,7 @@ class ResolverCreator {
   private resolverProps: any;
   private ignoreUserAccess?: boolean;
   private userRefenceName?: string;
+  private resolverWrapper?: (resolver: Resolver) => Resolver;
 
   constructor(resolverTypeName: TResolver, props: ResolverCreatorProps) {
     this.props = props;
@@ -28,6 +29,7 @@ class ResolverCreator {
     this.resolverName = resolverTypeName + props.queryModelName;
     this.ignoreUserAccess = props.ignoreUserAccess;
     this.userRefenceName = props.userReferenceName;
+    this.resolverWrapper = props.resolverWrapper;
     this.resolverProps = this.getResolverProps();
   }
 
@@ -159,9 +161,10 @@ class ResolverCreator {
         type: "[String]",
         description: "Use values columnname_asc or columnname_desc"
       });
-
+      
       r.setType(getPaginationOTC({ queryModelName, modelSet }))
-      return r;
+
+      return this.resolverWrapper ? this.resolverWrapper(r) : r;
     }).wrapResolve(() =>
       async (rp: ResolverResolveParams<any, any, any>) => {
         const { args, context } = rp;
