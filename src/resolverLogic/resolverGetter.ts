@@ -72,7 +72,7 @@ class ResolverCreator {
       record: {
         removeFields: [this.userRefenceName ?? ""]
       }
-    }).wrapResolve(() =>
+    }).wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r).wrapResolve(() =>
       async (rp: ResolverResolveParams<any, any, any>) => {
         const { args, context } = rp;
         this.validateRequest("createOne", { args, context });
@@ -83,6 +83,7 @@ class ResolverCreator {
 
   private getFindById() {
     return this.props.typeComposer.mongooseResolvers.findById()
+      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -99,7 +100,8 @@ class ResolverCreator {
       .wrap(r => {
         r.removeArg(["filter", "skip", "limit"]);
         r.addArgs({ ids: ["MongoID"] });
-        return r;
+
+        return this.resolverWrapper ? this.resolverWrapper(r) : r;
       })
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
@@ -113,6 +115,7 @@ class ResolverCreator {
 
   private getFindOne() {
     return this.props.typeComposer.mongooseResolvers.findOne()
+      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -124,6 +127,7 @@ class ResolverCreator {
 
   private getRemoveById() {
     return this.props.typeComposer.mongooseResolvers.removeById()
+      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -135,6 +139,7 @@ class ResolverCreator {
 
   private getUpdateById() {
     return this.props.typeComposer.mongooseResolvers.updateById()
+      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
