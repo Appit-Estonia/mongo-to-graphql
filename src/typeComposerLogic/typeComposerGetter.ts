@@ -41,9 +41,7 @@ export const getOTC = (modelName: string) => {
         tc.addNestedFields({
           [prop]: getResolverTypes({
             name: modelName + capitalizeFirstOnly(p.displayName || k),
-            fields: {
-              ...(isArray ? [fields] : fields)
-            },
+            fields: isArray ? [fields] : fields
           }),
         });
       }
