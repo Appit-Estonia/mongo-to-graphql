@@ -4,7 +4,6 @@ import { GraphContext } from "../context/types/request";
 import http from "http";
 import jwt from "jsonwebtoken";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import { hiveApollo } from '@graphql-hive/client'
 import app from "./app";
 import { StartupParams } from ".";
 import { MongoQL } from "../context";
@@ -37,19 +36,9 @@ export async function startApolloServer(params: StartupParams) {
       return { user: getUser(token.replace("Bearer ", ""), jwtSecret) } as GraphContext;
     },
     csrfPrevention: true,
+    introspection: !!process.env.ENABLE_SCHEMA_INTROSPECTION || process.env.NODE_ENV !== 'production',
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      hiveApollo({
-        enabled: !!process.env.HIVE_IS_ENABLED,
-        debug: !!process.env.HIVE_IS_DEBUG,
-        token: process.env.HIVE_TOKEN,
-        reporting: {
-          author: 'Author of the latest change',
-          commit: 'git sha or any identifier',
-          serviceName: process.env.HIVE_SERVICE_NAME,
-          serviceUrl: process.env.HIVE_SERVICE_URL
-        }
-      })
     ],
   });
   await server.start();
