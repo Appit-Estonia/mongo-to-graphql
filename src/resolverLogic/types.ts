@@ -1,6 +1,6 @@
 import { ObjectTypeComposerWithMongooseResolvers, resolverFactory } from "graphql-compose-mongoose";
 import { Document } from "mongoose";
-import { ObjectTypeComposer } from "graphql-compose";
+import { ObjectTypeComposer, Resolver } from "graphql-compose";
 import { RequestContent } from "../context/types/request";
 import { ModelSet } from "../context/types/setup";
 
@@ -19,6 +19,7 @@ export interface IResolveParams {
   modelSet: ModelSet;
   ignoreUserAccess?: boolean;
   userReferenceName?: string;
+  resolverWrapper?: (resolver: Resolver) => Resolver;
   typeComposer: ObjectTypeComposerWithMongooseResolvers<Document<any, any, any>, any>;
 }
 

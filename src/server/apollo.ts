@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ApolloServer } from "apollo-server-express";
 import { GraphContext } from "../context/types/request";
 import http from "http";
@@ -21,8 +22,8 @@ const getUser = (token: string, jwtSecret: string) => {
 
 export async function startApolloServer(params: StartupParams) {
 
-  const { contextSetup, jwtSecret, serverPort } = params;
-  const port = serverPort ?? 4001;
+  const { contextSetup, jwtSecret } = params;
+  const port = process.env.PORT ?? 4001;
 
   const mql = new MongoQL(contextSetup);
 
@@ -35,7 +36,10 @@ export async function startApolloServer(params: StartupParams) {
       return { user: getUser(token.replace("Bearer ", ""), jwtSecret) } as GraphContext;
     },
     csrfPrevention: true,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    introspection: !!process.env.ENABLE_SCHEMA_INTROSPECTION || process.env.NODE_ENV !== 'production',
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+    ],
   });
   await server.start();
   server.applyMiddleware({ app });

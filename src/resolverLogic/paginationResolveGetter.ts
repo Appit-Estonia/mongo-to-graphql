@@ -1,16 +1,17 @@
 import { groupBy, isEmpty } from "lodash";
 import mongoose, { Types } from "mongoose";
 import { getUserId, ObjectId } from "../permissionsLogic/validate-permission";
-import { getSorting } from "./helpers";
+import { getFilterComparison, getSorting } from "./helpers";
 import { BadRequestError } from "../errors/badRequestError";
 import { PagiantionTypeProps } from "../typeComposerLogic/types";
 import { ModelSet } from "../context/types/setup";
-import { BaseFilterParams, ComparisonTypes, PaginationFilter, RequestContent } from "../context/types/request";
-import { getSetup } from "../context";
+import { BaseFilterParams, PaginationFilter, RequestContent } from "../context/types/request";
 import { getPopulates } from "./resolverGetter";
 
 type TFilterValue = boolean | string | number | RegExp | Types.ObjectId;
 type TFilterValues = string[] | number[] | RegExp[] | Types.ObjectId[];
+
+interface TComparisonType { [key: string]: {[comparison: string]: TFilterValue | TFilterValues} }
 
 interface DefinedFilterKeyPair {
   filterKey: string;
@@ -125,49 +126,14 @@ export class PaginationResolveCreator {
   }
 
   private async getPaginationFilter(paginationFilter: PaginationFilter, modelSet: ModelSet) {
-
-    const getLikeRegex = (value: string) => new RegExp(".*" + value + ".*", "i");
-    const getValue = (value: any) => isValidObjectId(value) ? new ObjectId(value) : value;
-
     const getFilters = (filters: BaseFilterParams[]) => {
-      const res: { [key: string]: {[comparison: string]: TFilterValue | TFilterValues} }[] = [];
-      filters.forEach(o => {
-        const pushFilter = (value: undefined | TFilterValue | TFilterValues, comparison: string) => {
-          if(value) {
-            res.push({[o.fieldKey]: {[`$${comparison}`]: getValue(value)}});
-          }
-        }
-        
-        pushFilter(o.equals, "eq");
-        if(o.like) {
-          pushFilter(getLikeRegex(o.like), "regex");
-        }
-        pushFilter(o.not, "ne");
-        pushFilter(o.greaterThan, "gt");
-        pushFilter(o.lessThan, "lt");
-        pushFilter(o.greaterOrEquals, "gte");
-        pushFilter(o.lessOrEquals, "lte");
-        pushFilter(o.in, "in");
-        pushFilter(o.inLike?.map(i => getLikeRegex(i)), "in");
-        pushFilter(o.notIn, "nin");
-        if(o.between) {
-          res.push({ [o.fieldKey]: { "$gte": getValue(o.between.from), "$lte": getValue(o.between.to) } });
-        }
+      const res: TComparisonType[] = [];
 
-        pushFilter(o.numberEquals, "eq");
-        pushFilter(o.numberNot, "ne");
-        pushFilter(o.numberGreaterThan, "gt");
-        pushFilter(o.numberLessThan, "lt");
-        pushFilter(o.numberGreaterOrEquals, "gte");
-        pushFilter(o.numberLessOrEquals, "lte");
-        pushFilter(o.numberIn, "in");
-        pushFilter(o.numberNotIn, "nin");
-        if(o.numberBetween) {
-          res.push({ [o.fieldKey]: { "$gte": getValue(o.numberBetween.from), "$lte": getValue(o.numberBetween.to) } });
+      filters.forEach(filter => {
+        const comparison = getFilterComparison(filter) as TComparisonType;
+        if (comparison) {
+          res.push(comparison)
         }
-
-        pushFilter(o.booleanEquals, "eq");
-
       });
       return res;
     }
@@ -216,8 +182,4 @@ export class PaginationResolveCreator {
 
     return definedFilters;
   }
-}
-
-const isValidObjectId = (id: string) => {
-  return ObjectId.isValid(id) && (String)(new ObjectId(id)) === id;
 }
