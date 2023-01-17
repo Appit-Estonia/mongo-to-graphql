@@ -72,7 +72,7 @@ class ResolverCreator {
       record: {
         removeFields: [this.userRefenceName ?? ""]
       }
-    }).wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r).wrapResolve(() =>
+    }).wrap((r) => this.resolverWrapper ? this.resolverWrapper(r) : r).wrapResolve(() =>
       async (rp: ResolverResolveParams<any, any, any>) => {
         const { args, context } = rp;
         this.validateRequest("createOne", { args, context });
@@ -83,7 +83,7 @@ class ResolverCreator {
 
   private getFindById() {
     return this.props.typeComposer.mongooseResolvers.findById()
-      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
+      .wrap((r) => this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -115,7 +115,7 @@ class ResolverCreator {
 
   private getFindOne() {
     return this.props.typeComposer.mongooseResolvers.findOne()
-      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
+      .wrap((r) => this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -127,19 +127,19 @@ class ResolverCreator {
 
   private getRemoveById() {
     return this.props.typeComposer.mongooseResolvers.removeById()
-      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
+      .wrap((r) => this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("removeById", { args, context });
-          return toRecord(await this.model.delete(new ObjectId(args._id))
+          return toRecord(await this.model.findByIdAndDelete(args._id)
             .populate(getPopulates(this.props.modelSet)));
         });
   }
 
   private getUpdateById() {
     return this.props.typeComposer.mongooseResolvers.updateById()
-      .wrap((r) =>  this.resolverWrapper ? this.resolverWrapper(r) : r)
+      .wrap((r) => this.resolverWrapper ? this.resolverWrapper(r) : r)
       .wrapResolve(() =>
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
@@ -166,7 +166,7 @@ class ResolverCreator {
         type: "[String]",
         description: "Use values columnname_asc or columnname_desc"
       });
-      
+
       r.setType(getPaginationOTC({ queryModelName, modelSet }))
 
       return this.resolverWrapper ? this.resolverWrapper(r) : r;
