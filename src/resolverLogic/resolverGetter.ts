@@ -132,7 +132,7 @@ class ResolverCreator {
         async (rp: ResolverResolveParams<any, any, any>) => {
           const { args, context } = rp;
           this.validateRequest("removeById", { args, context });
-          return toRecord(await this.model.delete(this.getWrappedFilter(new ObjectId(args.filter._id), context))
+          return toRecord(await this.model.delete(new ObjectId(args._id))
             .populate(getPopulates(this.props.modelSet)));
         });
   }
