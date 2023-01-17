@@ -10,6 +10,7 @@ export interface Setup {
       modelSet: ModelSet;
       queries?: SchemaField[];
       mutations?: SchemaField[];
+      readonlyFields?: string[];
     };
   };
   userContextPaths?: {
