@@ -74,6 +74,7 @@ export interface BaseFilterParams {
 
   // boolean inputs
   booleanEquals?: boolean;
+  query: any,
 }
 
 interface DefinedFilterParams {
