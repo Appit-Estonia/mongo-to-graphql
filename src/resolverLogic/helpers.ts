@@ -73,12 +73,12 @@ const isValidObjectId = (id: string) => {
   return ObjectId.isValid(id) && (String)(new ObjectId(id)) === id;
 }
 
-const getLikeRegex = (value: string) => new RegExp(".*" + value + ".*", "i");
+const getLikeRegex = (value?: string) => new RegExp(".*" + value + ".*", "i");
 const getValue = (value: any) => isValidObjectId(value) ? new ObjectId(value) : value;
 
 export const getFilterComparison = (filter: BaseFilterParams) => {
   // Get comparison key from filter object. As there shoudn't be more filter clauses per filter then by default first comparison clause will be used
-  const {fieldKey, ...rest} = filter;
+  const { fieldKey, ...rest } = filter;
   const comparisonKey = Object.keys(rest)?.[0] as keyof Omit<BaseFilterParams, 'fieldKey'>;
 
   if (!comparisonKey) return undefined;
@@ -89,9 +89,11 @@ export const getFilterComparison = (filter: BaseFilterParams) => {
       return { [fieldKey]: { "$gte": getValue(filter.between?.from), "$lte": getValue(filter.between?.to) } }
     case "numberBetween":
       return { [fieldKey]: { "$gte": getValue(filter.numberBetween?.from), "$lte": getValue(filter.numberBetween?.to) } }
+    case "like":
+      return { [fieldKey]: { "$regex": getLikeRegex(filter[comparisonKey]) } }
     case "inLike":
-      return {[fieldKey]: { "$in": getValue(filter.inLike?.map(i => getLikeRegex(i)))}}
+      return { [fieldKey]: { "$in": getValue(filter.inLike?.map(i => getLikeRegex(i))) } }
     default:
-      return {[fieldKey]: {[`$${filterComparisonMap[comparisonKey]}`]: getValue(filter[comparisonKey])}}
+      return { [fieldKey]: { [`$${filterComparisonMap[comparisonKey]}`]: getValue(filter[comparisonKey]) } }
   }
 };

@@ -25,7 +25,9 @@ export const getOTC = (modelName: string) => {
     tc = schemaComposer.createObjectTC(modelSet.model);
   }
 
-  tc.getInputTypeComposer().removeField(getSetup().readonlyFields ?? []);
+  tc.getInputTypeComposer()
+    .removeField(getSetup().readonlyFields ?? [])
+    .removeField(getModelSetup(modelName).readonlyFields ?? []);
 
   getModelSetup(modelName).modelSet?.populates?.forEach(p => {
     let propPath: string[] = [];
