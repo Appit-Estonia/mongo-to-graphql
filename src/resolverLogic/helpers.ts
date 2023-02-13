@@ -67,6 +67,7 @@ const filterComparisonMap = {
   numberIn: "in",
   numberNotIn: "nin",
   booleanEquals: "eq",
+  query: "query",
 }
 
 const isValidObjectId = (id: string) => {
@@ -93,6 +94,8 @@ export const getFilterComparison = (filter: BaseFilterParams) => {
       return { [fieldKey]: { "$regex": getLikeRegex(filter[comparisonKey]) } }
     case "inLike":
       return { [fieldKey]: { "$in": getValue(filter.inLike?.map(i => getLikeRegex(i))) } }
+    case "query":
+      return { [fieldKey]: filter[comparisonKey] }
     default:
       return { [fieldKey]: { [`$${filterComparisonMap[comparisonKey]}`]: getValue(filter[comparisonKey]) } }
   }
