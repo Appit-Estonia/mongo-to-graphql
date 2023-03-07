@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ApolloServer } from "apollo-server-express";
+import { ApolloServer} from "apollo-server-express";
 import { GraphContext } from "../context/types/request";
 import http from "http";
 import jwt from "jsonwebtoken";
@@ -7,6 +7,7 @@ import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import app from "./app";
 import { StartupParams } from ".";
 import { MongoQL } from "../context";
+import {ApolloLogPlugin} from 'apollo-log';
 
 const getUser = (token: string, jwtSecret: string) => {
   try {
@@ -39,10 +40,14 @@ export async function startApolloServer(params: StartupParams) {
     introspection: !!process.env.ENABLE_SCHEMA_INTROSPECTION || process.env.NODE_ENV !== 'production',
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloLogPlugin({
+        timestamp: true,
+      })
     ],
   });
   await server.start();
   server.applyMiddleware({ app });
+
   await new Promise<void>((resolve) =>
     httpServer.listen({ port }, resolve)
   );
