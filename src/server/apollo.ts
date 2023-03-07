@@ -42,6 +42,22 @@ export async function startApolloServer(params: StartupParams) {
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloLogPlugin({
         timestamp: true,
+        events: {
+          didEncounterErrors: true,
+          didResolveOperation: false,
+          executionDidStart: false,
+          parsingDidStart: false,
+          responseForOperation: false,
+          validationDidStart: false,
+          willSendResponse: false
+        },
+        mutate: (data) => {
+          return {
+            error: data.context.errors,
+            request: data.context.request,
+            source: data.context.source
+          }
+        }
       })
     ],
   });
