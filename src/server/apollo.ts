@@ -40,7 +40,7 @@ export async function startApolloServer(params: StartupParams) {
     introspection: !!process.env.ENABLE_SCHEMA_INTROSPECTION || process.env.NODE_ENV !== 'production',
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
-      process.env.NODE_ENV === "production" && ApolloLogPlugin({
+      process.env.NODE_ENV === "production" ? ApolloLogPlugin({
         timestamp: true,
         events: {
           didEncounterErrors: true,
@@ -58,7 +58,7 @@ export async function startApolloServer(params: StartupParams) {
             source: data.context.source
           }
         }
-      })
+      }) : {}
     ],
   });
   await server.start();
