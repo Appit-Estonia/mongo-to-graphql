@@ -55,6 +55,7 @@ export class MongoQL {
   }
 
   public getSchema() {
+    schemaComposer.merge(this.setup.schema_tg);
     return schemaComposer.buildSchema();
   }
 

@@ -21,6 +21,7 @@ export interface Setup {
   // TODO: type should be reconsidered
   nonModelTypeComposers?: TResolverType[];
   userRequestValidation?: () => boolean;
+  schema_tg?: any;
 }
 
 export interface PopulateOption {
