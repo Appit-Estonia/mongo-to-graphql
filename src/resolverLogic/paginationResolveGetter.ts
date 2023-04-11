@@ -46,8 +46,8 @@ export class PaginationResolveCreator {
     const currentPage = page ?? 1;
 
     // for performance safety
-    if (per < 1 || per > 1000) {
-      throw new BadRequestError("error.per_page_not_between_1_1000");
+    if (per < 1 || per > 10000) {
+      throw new BadRequestError("error.per_page_not_between_1_10000");
     }
 
     const { model, selectedFields, defaultFields, filters } = await this.getQueryTableInfo({
